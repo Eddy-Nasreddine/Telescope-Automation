@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telescope HUD</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+
+    <div class="container">
+        <h1>Telescope HUD</h1>
+
+        <!-- STATUS PANEL -->
+        <div class="panel status-panel">
+            <h2>Status</h2>
+
+            <div class="status-grid">
+                <!-- THIS is the important one -->
+                <div>
+                    <strong>Altitude:</strong>
+                    <span id="altitude">0</span>
+                </div>
+
+                <!-- keep everything else the same -->
+                <div><strong>Azimuth:</strong> <span>0</span></div>
+                <div><strong>Speed:</strong> <span>1</span></div>
+                <div><strong>Tracking:</strong> <span>Off</span></div>
+                <div><strong>Moving:</strong> <span>No</span></div>
+                <div><strong>Last Action:</strong> <span>None</span></div>
+            </div>
+
+            <p class="system-message">
+                <strong>System Message:</strong>
+                <span>System ready</span>
+            </p>
+        </div>
+
+        <!-- MOVEMENT PANEL -->
+        <div class="panel controls-panel">
+            <h2>Movement</h2>
+
+            <div class="movement-grid">
+                <button onclick="sendCommand('move_up')">Up</button>
+                <div></div>
+                <!-- everything else untouched -->
+                <button>Left</button>
+                <button class="stop-btn">Stop</button>
+                <button>Right</button>
+
+                <div></div>
+
+                <button onclick="sendCommand('move_down')">Down</button>
+            </div>
+        </div>
+
+        <!-- keep rest of your UI unchanged -->
+        <div class="panel controls-panel">
+            <h2>System Controls</h2>
+            <div class="button-row">
+                <button>Home</button>
+                <button>Tracking On</button>
+                <button>Tracking Off</button>
+            </div>
+        </div>
+
+        <div class="panel controls-panel">
+            <h2>Speed Controls</h2>
+            <div class="button-row">
+                <button>Speed -</button>
+                <button>Speed +</button>
+            </div>
+        </div>
+
+        <div class="panel log-panel">
+            <h2>Response</h2>
+            <p>No commands sent yet.</p>
+        </div>
+    </div>
+
+    <!-- ✅ THIS CONNECTS YOUR JS -->
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+</body>
+</html>
