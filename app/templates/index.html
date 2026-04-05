@@ -7,22 +7,20 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
 <body>
-
     <div class="container">
         <h1>Telescope HUD</h1>
 
-        <!-- STATUS PANEL -->
         <div class="panel status-panel">
             <h2>Status</h2>
 
             <div class="status-grid">
-                <!-- THIS is the important one -->
                 <div>
                     <strong>Altitude:</strong>
                     <span id="altitude">0</span>
+                    <span>&#176;</span>
+
                 </div>
 
-                <!-- keep everything else the same -->
                 <div><strong>Azimuth:</strong> <span>0</span></div>
                 <div><strong>Speed:</strong> <span>1</span></div>
                 <div><strong>Tracking:</strong> <span>Off</span></div>
@@ -40,21 +38,18 @@
         <div class="panel controls-panel">
             <h2>Movement</h2>
 
-            <div class="movement-grid">
-                <button onclick="sendCommand('move_up')">Up</button>
+            <div class="movement-grid" >
                 <div></div>
-                <!-- everything else untouched -->
-                <button>Left</button>
+                <button onmousedown="mouseDown('up')" onmouseup="mouseUp('up')">Up</button>
+                <div></div>
+                <button onmousedown="mouseDown('left')" onmouseup="mouseUp('left')">Left</button>
                 <button class="stop-btn">Stop</button>
-                <button>Right</button>
-
+                <button onmousedown="mouseDown('right')" onmouseup="mouseUp('right')">Right</button>
                 <div></div>
-
-                <button onclick="sendCommand('move_down')">Down</button>
+                <button onmousedown="mouseDown('down')" onmouseup="mouseUp('down')">Down</button>
             </div>
         </div>
 
-        <!-- keep rest of your UI unchanged -->
         <div class="panel controls-panel">
             <h2>System Controls</h2>
             <div class="button-row">
@@ -78,7 +73,6 @@
         </div>
     </div>
 
-    <!-- ✅ THIS CONNECTS YOUR JS -->
     <script src="{{ url_for('static', filename='script.js') }}"></script>
 
 </body>

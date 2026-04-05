@@ -57,12 +57,23 @@ button {
     transition: 0.2s ease;
 }
 
+button:active {
+    background: #1c5bbf; 
+    transform: scale(0.97); 
+}
+
+
 button:hover {
     opacity: 0.9;
 }
 
 .stop-btn {
     background: #d64545;
+}
+
+.stop-btn:active{
+    background: #da1b1b;
+    transform: scale(0.97); 
 }
 
 .log-panel p {
