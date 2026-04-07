@@ -122,6 +122,7 @@ def test():
     angle = Angle(53, 0)
     # TelescopeController.move_to(angle)
     TelescopeController.testy()
+    
     return jsonify({"status": "ok"})
 
 
