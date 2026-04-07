@@ -54,12 +54,18 @@ document.addEventListener("mouseup", async function () {
     }
 });
 
-
+async function test() {
+    await fetch("/test", {
+        method: "POST"
+    });
+}
 
 async function fetchStatus() {
     const response = await fetch("/status");
     const data = await response.json();
     document.getElementById("altitude").textContent = data.altitude;
+    document.getElementById("azimuth").textContent = data.azimuth;
+
 }
 
 
