@@ -1,12 +1,21 @@
-from flask import Flask, jsonify, render_template, request
+from flask import Flask, jsonify, render_template, request, Response
 from motor_controller import MotorController
 from TelescopeController import TelescopeController
 from Angle import Angle 
 import threading
 from time import sleep
+from camera_stream import CameraStream
 
 
 app = Flask(__name__)
+
+camera_stream = CameraStream(
+    camera_index=0,
+    width=1280,
+    height=720,
+    fps=30,
+    jpeg_quality=80,
+)
 
 altitude = 90 # telescope pointed straight up
 azimuth = 0  # Pointed to some reference for now probably east for now
@@ -60,20 +69,20 @@ def move_continuously(action):
         if action == "left":
             print("moving left")
             # not implemented yet
-            # NEMA23_Motor.step_clockwise()
+            NEMA23_Motor.step_clockwise()
             azimuth += theta_driven
         elif action == "right":
             # not implemented yet
             print("moving right")
-            # NEMA23_Motor.step_counterclockwise()
+            NEMA23_Motor.step_counterclockwise()
             azimuth -= theta_driven
         elif action == "up":
             print("moving up")
-            # NEMA17_Motor.step_counterclockwise()
+            NEMA17_Motor.step_counterclockwise()
             altitude += theta_a
         elif action == "down":
             print("moving down")
-            # NEMA17_Motor.step_clockwise()
+            NEMA17_Motor.step_clockwise()
             altitude -= theta_a        
 
     with lock:
@@ -117,12 +126,35 @@ def movement_unpressed():
         movement_flags[action] = False
     return jsonify({"altitude": round(altitude, 3)})
 
+
+@app.route("/move_to", methods=["POST"])
+def move_to():
+    data = request.get_json()
+    altitude = float(data.get("altitude"))
+    azimuth = float(data.get("azimuth"))
+    print(f"Move to: al: {altitude}|azi: {azimuth}")
+    angle = Angle(altitude, azimuth)
+    # TelescopeController.move_to(angle)    
+    return jsonify({"status": "ok"})
+
+@app.route("/stop_move_to", methods=["POST"])
+def stop_move_to():
+    TelescopeController.stop()
+    print("stop button was pressed")
+    return jsonify({"status": "ok"})
+
+@app.route("/video_feed")
+def video_feed():
+    camera_stream.start()
+    return Response(
+        camera_stream.generate_frames(),
+        mimetype="multipart/x-mixed-replace; boundary=frame",
+    )
+
 @app.route("/test", methods=["POST"])
 def test():
-    angle = Angle(53, 0)
-    # TelescopeController.move_to(angle)
-    TelescopeController.testy()
-    
+    angle = Angle(52, 1)
+    TelescopeController.move_to(angle)
     return jsonify({"status": "ok"})
 
 

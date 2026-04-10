@@ -1,6 +1,5 @@
 let currentAction = null;
 
-
 async function sendCommand(action) {
     const response = await fetch("/command", {
         method: "POST",
@@ -54,10 +53,38 @@ document.addEventListener("mouseup", async function () {
     }
 });
 
+document.getElementById("move_to").addEventListener("submit", async function(e) {
+    e.preventDefault(); 
+
+    const altitude = document.getElementById("move_altitude").value;
+    const azimuth = document.getElementById("move_azimuth").value;
+
+    const response = await fetch("/move_to", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            azimuth: azimuth,
+            altitude: altitude
+        })
+    });
+
+    const data = await response.json();
+    console.log(data);
+});
+
 async function test() {
     await fetch("/test", {
         method: "POST"
     });
+}
+
+async function stop_move_to() {
+    await fetch("/stop_move_to", {
+        method: "POST"
+    });
+    
 }
 
 async function fetchStatus() {
@@ -69,4 +96,4 @@ async function fetchStatus() {
 }
 
 
-setInterval(fetchStatus, 100);
+// setInterval(fetchStatus, 100);

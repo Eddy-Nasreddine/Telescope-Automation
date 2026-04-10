@@ -6,74 +6,92 @@
     <title>Telescope HUD</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
 </head>
+
 <body>
+   
     <div class="container">
-        <h1>Telescope HUD</h1>
+        <div class="controls_container">
+            <h1>Telescope Dashboard</h1>
 
-        <div class="panel status-panel">
-            <h2>Status</h2>
+            <div class="panel status-panel">
+                <h2>Status</h2>
 
-            <div class="status-grid">
-                <div>
-                    <strong>Altitude:</strong>
-                    <span id="altitude">0</span><span>&#176;</span>
+                <div class="status-grid">
+                    <div>
+                        <strong>Altitude:</strong>
+                        <span id="altitude">0</span><span>&#176;</span>
+                    </div>
+                    <div>
+                        <strong>Azimuth:</strong> 
+                        <span id="azimuth">0</span><span>&#176;</span>
+                    </div>
+                    <div><strong>Speed:</strong> <span>1</span></div>
+                    <div><strong>Tracking:</strong> <span>Off</span></div>
+                    <div><strong>Moving:</strong> <span>No</span></div>
+                    <div><strong>Last Action:</strong> <span>None</span></div>
                 </div>
-                <div>
-                    <strong>Azimuth:</strong> 
-                    <span id="azimuth">0</span><span>&#176;</span>
+
+                <p class="system-message">
+                    <strong>System Message:</strong>
+                    <span>System ready</span>
+                </p>
+            </div>
+
+            <!-- MOVEMENT PANEL -->
+            <div class="panel controls-panel">
+                <h2>Manual Controls</h2>
+                <div class="manual-panel-content">
+                    <div class="movement-grid" >
+                        <div></div>
+                        <button onmousedown="mouseDown('up')" onmouseup="mouseUp('up')">Up</button>
+                        <div></div>
+                        <button onmousedown="mouseDown('left')" onmouseup="mouseUp('left')">Left</button>
+                        <button class="stop-btn" onclick="stop_move_to()">Stop</button>
+                        <button onmousedown="mouseDown('right')" onmouseup="mouseUp('right')">Right</button>
+                        <div></div>
+                        <button onmousedown="mouseDown('down')" onmouseup="mouseUp('down')">Down</button>
+                    </div>
+
+                    <div class="move-to">
+                        <form id="move_to">
+                            <Strong for="fname">Azimuth:</Strong><br>
+                            <input type="number" id="move_azimuth" name="azimuth"><br>
+                            <Strong for="lname">Altitude:</Strong><br>
+                            <input type="number" id="move_altitude" name="altitude"><br><br>
+                            <button type="submit" value="Submit">Submit</button>
+                        </form> 
+                    </div>
                 </div>
-                <div><strong>Speed:</strong> <span>1</span></div>
-                <div><strong>Tracking:</strong> <span>Off</span></div>
-                <div><strong>Moving:</strong> <span>No</span></div>
-                <div><strong>Last Action:</strong> <span>None</span></div>
             </div>
 
-            <p class="system-message">
-                <strong>System Message:</strong>
-                <span>System ready</span>
-            </p>
-        </div>
+            <div class="panel controls-panel">
+                <h2>System Controls</h2>
+                <div class="button-row">
+                    <button onclick="test()">THE BIG TEST</button>
+                    <button>Tracking On</button>
+                    <button>Tracking Off</button>
+                </div>
+            </div>
 
-        <!-- MOVEMENT PANEL -->
-        <div class="panel controls-panel">
-            <h2>Movement</h2>
+            <div class="panel controls-panel">
+                <h2>Speed Controls</h2>
+                <div class="button-row">
+                    <button>Speed -</button>
+                    <button>Speed +</button>
+                </div>
+            </div>
 
-            <div class="movement-grid" >
-                <div></div>
-                <button onmousedown="mouseDown('up')" onmouseup="mouseUp('up')">Up</button>
-                <div></div>
-                <button onmousedown="mouseDown('left')" onmouseup="mouseUp('left')">Left</button>
-                <button class="stop-btn">Stop</button>
-                <button onmousedown="mouseDown('right')" onmouseup="mouseUp('right')">Right</button>
-                <div></div>
-                <button onmousedown="mouseDown('down')" onmouseup="mouseUp('down')">Down</button>
+            <div class="panel log-panel" style="margin-bottom: 50px;">
+                <h2>Response</h2>
+                <p>No commands sent yet.</p>
             </div>
         </div>
-
-        <div class="panel controls-panel">
-            <h2>System Controls</h2>
-            <div class="button-row">
-                <button onclick="test()">THE BIG TEST</button>
-                <button>Tracking On</button>
-                <button>Tracking Off</button>
-            </div>
-        </div>
-
-        <div class="panel controls-panel">
-            <h2>Speed Controls</h2>
-            <div class="button-row">
-                <button>Speed -</button>
-                <button>Speed +</button>
-            </div>
-        </div>
-
-        <div class="panel log-panel">
-            <h2>Response</h2>
-            <p>No commands sent yet.</p>
+         <div class="camera-container">
+            <h2>Live Camera</h2>
+            <img src="/video_feed" alt="Live Stream" id="camera-stream">
         </div>
     </div>
-
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-
+    
 </body>
 </html>
