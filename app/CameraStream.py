@@ -1,6 +1,7 @@
 import cv2
 import threading
 import time
+import subprocess
 
 
 class CameraStream:
@@ -24,6 +25,29 @@ class CameraStream:
         self.thread = None
         self.running = False
 
+    def set_controls(self, exposure=None, gain=None, brightness=None):
+        def set_ctrl(name, value):
+            subprocess.run([
+                "v4l2-ctl",
+                f"--device=/dev/video{self.camera_index}",
+                f"--set-ctrl={name}={value}"
+            ], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        if exposure is None and gain is None and brightness is None:
+            return
+
+        if exposure is not None:
+            exposure = max(12, min(int(exposure), 800))
+
+            set_ctrl("auto_exposure", 1)
+            set_ctrl("exposure_time_absolute", exposure)
+
+        if gain is not None:
+            set_ctrl("gain", max(0, min(int(gain), 100)))
+
+        if brightness is not None:
+            set_ctrl("brightness", max(-64, min(int(brightness), 64)))
+
     def start(self):
         if self.running:
             return
@@ -41,6 +65,11 @@ class CameraStream:
         self.running = True
         self.thread = threading.Thread(target=self._update_frames, daemon=True)
         self.thread.start()
+        self.set_controls(
+        exposure=200,
+        gain=10,
+        brightness=0
+        )
 
     def _update_frames(self):
         while self.running:

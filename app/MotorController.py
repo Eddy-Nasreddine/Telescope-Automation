@@ -29,12 +29,18 @@ class MotorController:
         sleep(self.delay)
 
     def step_clockwise(self):
-        self.set_direction(self.CW)
-        self.step()
+        # self.set_direction(self.CW)
+        # self.step()
+        
+        # mimick moving without turning on for testing
+        sleep(self.delay*2)
 
     def step_counterclockwise(self):
-        self.set_direction(self.CCW)
-        self.step()
+        # self.set_direction(self.CCW)
+        # self.step()
+        
+        # mimick moving without turning on for testing
+        sleep(self.delay*2)
 
     def get_angle_per_step(self) -> float:
         return self.step_angle*self.micro_stepping

@@ -27,7 +27,7 @@
                     </div>
                     <div><strong>Speed:</strong> <span>1</span></div>
                     <div><strong>Tracking:</strong> <span>Off</span></div>
-                    <div><strong>Moving:</strong> <span>No</span></div>
+                    <div><strong>Moving:</strong> <span id="moving">No</span></div>
                     <div><strong>Last Action:</strong> <span>None</span></div>
                 </div>
 
@@ -37,7 +37,6 @@
                 </p>
             </div>
 
-            <!-- MOVEMENT PANEL -->
             <div class="panel controls-panel">
                 <h2>Manual Controls</h2>
                 <div class="manual-panel-content">
@@ -55,9 +54,9 @@
                     <div class="move-to">
                         <form id="move_to">
                             <Strong for="fname">Azimuth:</Strong><br>
-                            <input type="number" id="move_azimuth" name="azimuth"><br>
+                            <input type="number" id="move_azimuth" name="azimuth" step="0.01"><br>
                             <Strong for="lname">Altitude:</Strong><br>
-                            <input type="number" id="move_altitude" name="altitude"><br><br>
+                            <input type="number" id="move_altitude" name="altitude" max="90" min="0" step="0.01"><br><br>
                             <button type="submit" value="Submit">Submit</button>
                         </form> 
                     </div>
@@ -67,9 +66,9 @@
             <div class="panel controls-panel">
                 <h2>System Controls</h2>
                 <div class="button-row">
-                    <button onclick="test()">THE BIG TEST</button>
                     <button>Tracking On</button>
                     <button>Tracking Off</button>
+                    <button onclick="test()">Test</button>
                 </div>
             </div>
 
@@ -87,8 +86,27 @@
             </div>
         </div>
          <div class="camera-container">
-            <h2>Live Camera</h2>
             <img src="/video_feed" alt="Live Stream" id="camera-stream">
+            <div class="panel camera_controls">
+                <h2>Camera Controls</h2>
+                    <div style="display: flex; flex-direction:column; gap: 20px;">
+                        <div class="camera-control-row">
+                            <strong style="width: 130px;">Brightness:</strong>
+                            <input type="range" min="-64" max="64" value="0" class="slider" id="brightnessRange">
+                            <span id="brightnessValue"></span>
+                        </div>
+                        <div class="camera-control-row">                        
+                            <strong style="width: 130px;">Exposure:</strong>
+                            <input type="range" min="12" max="800" value="200" class="slider" id="exposureRange">
+                            <span id="exposureValue"></span>
+                        </div>
+                        <div class="camera-control-row">                        
+                            <strong style="width: 130px;">Gain:</strong>
+                            <input type="range" min="0" max="100" value="10" class="slider" id="gainRange">
+                            <span id="gainValue"></span>
+                        </div>
+                    </div>
+            </div>
         </div>
     </div>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
