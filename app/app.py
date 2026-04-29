@@ -1,5 +1,5 @@
 from flask import Flask, jsonify, render_template, request, Response
-from MotorController import MotorController
+from MotorController import StepperMotor
 from TelescopeController import TelescopeController
 from CelestialObject import CelestialObject
 from Angle import Angle 
@@ -10,17 +10,16 @@ from CameraStream import CameraStream
 
 app = Flask(__name__)
 
-camera_stream = CameraStream(
-    camera_index=0,
-    width=1280,
-    height=720,
-    fps=30,
-    jpeg_quality=80,
-)
+# camera_stream = CameraStream(
+#     camera_index=0,
+#     width=1280,
+#     height=720,
+#     fps=30,
+#     jpeg_quality=80,
+# )
 
-
-NEMA17_Motor = MotorController(17, 27, 0.01, 1.8, 1/2)
-NEMA23_Motor = MotorController(23, 24, 0.01, 1.8, 1/2)
+NEMA17_Motor = StepperMotor(1.8, 1/2)
+NEMA23_Motor = StepperMotor(1.8, 1/2)
 
 TelescopeController = TelescopeController(NEMA17_Motor, NEMA23_Motor, 12, 120, 30, 200)
 
@@ -35,7 +34,6 @@ movement_flags = {
 
 movement_threads = {}
 lock = threading.Lock()
-moving = False
 
 def move_continuously(action):
     while True:
@@ -71,11 +69,10 @@ def index():
     
 @app.route("/status", methods=["GET"])
 def status():
-
     return jsonify({
         "altitude": round(TelescopeController.current_alt, 3),
         "azimuth" : round(TelescopeController.current_az, 3),
-        "moving": moving,
+        "moving": TelescopeController.moving,
     })
 
 
@@ -141,32 +138,34 @@ def stop_move_to():
     return jsonify({"status": "ok"})
 
 
-@app.route("/video_feed")
-def video_feed():
-    camera_stream.start()
-    return Response(
-        camera_stream.generate_frames(),
-        mimetype="multipart/x-mixed-replace; boundary=frame",
-    )
+# @app.route("/video_feed")
+# def video_feed():
+#     camera_stream.start()
+#     return Response(
+#         camera_stream.generate_frames(),
+#         mimetype="multipart/x-mixed-replace; boundary=frame",
+#     )
 
 
-@app.route("/update_camera", methods=["POST"])
-def update_camera():
-    data = request.get_json()
-    camera_stream.set_controls(
-        exposure=data.get("exposure"), 
-        gain=data.get("gain"), 
-        brightness=data.get("brightness"))
+# @app.route("/update_camera", methods=["POST"])
+# def update_camera():
+#     data = request.get_json()
+#     camera_stream.set_controls(
+#         exposure=data.get("exposure"), 
+#         gain=data.get("gain"), 
+#         brightness=data.get("brightness"))
     
-    return jsonify({"status": "ok"})
+#     return jsonify({"status": "ok"})
 
 @app.route("/test", methods=["POST"])
 def test():
     print("test was called")
-    cel_object = CelestialObject("jupiter")
-    TelescopeController.start_tracking(cel_object)
-    return jsonify({"status": "ok"})
+    # cel_object = CelestialObject("jupiter")
+    # TelescopeController.start_tracking(cel_object)
 
+    angle = Angle(95,95)
+    TelescopeController.move_to(angle)
+    return jsonify({"status": "ok"})
 
 
 if __name__ == "__main__":
@@ -180,4 +179,4 @@ if __name__ == "__main__":
 
     werkzeug_log = logging.getLogger("werkzeug")
     werkzeug_log.addFilter(IgnoreStatusFilter())
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=False)
