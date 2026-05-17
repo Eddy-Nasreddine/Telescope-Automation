@@ -1,10 +1,14 @@
-from skyfield.api import load, Topos
+from skyfield.api import Loader, Topos
+
+# Load once at module level — avoids reloading the file on every CelestialObject()
+_loader = Loader('/home/eddy/Desktop/Telescope-Automation/data')
+_planets = _loader('de421.bsp')
+_ts = _loader.timescale()
 
 class CelestialObject:
     def __init__(self, celestial_body: str):
         self.name = celestial_body.lower()
-
-        self.planets = load('de421.bsp')
+        self.planets = _planets  
         self.earth = self.planets['earth']
 
         self.name_map = {
@@ -26,13 +30,11 @@ class CelestialObject:
             raise ValueError(f"Unsupported celestial body: {celestial_body}")
 
         self.cel_body = self.planets[key]
-
         self.coords = Topos(
             latitude_degrees=53.62300344381324,
             longitude_degrees=-113.51295247822964
         )
-
-        self.ts = load.timescale()
+        self.ts = _ts  
 
     def get_time_now(self):
         return self.ts.now()

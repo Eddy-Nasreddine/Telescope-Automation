@@ -86,7 +86,6 @@ input::-webkit-inner-spin-button {
     margin: 0 auto;
     padding: 20px;
     max-height: 100vh;
-    overflow-y: scroll;
 }
 
 h1, h2 {
@@ -182,4 +181,71 @@ button:hover {
     flex-direction: row;
     align-items: center;
     gap: 20px;
+}
+
+.planet-card img {
+    width: 100px;
+    height: 100px;
+    object-fit: contain;
+}
+
+.planet-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    padding: 10px;
+    gap: 5px;
+    cursor: pointer;
+}
+
+#planet_list {
+    display: grid;
+    grid-template-columns: repeat(4, fit-content(100px));
+}
+
+.planet-card.selected {
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+    outline: 2px solid white;
+}
+
+.auto-status {
+    margin-top: 10px;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-align: center;
+}
+
+@keyframes ellipsis {
+    0%   { content: '.'; }
+    33%  { content: '..'; }
+    66%  { content: '...'; }
+}
+
+.auto-status .dots::after {
+    content: '.';
+    animation: ellipsis 1.5s steps(1) infinite;
+    display: inline-block;
+    width: 20px;
+    text-align: left;
+}
+
+.auto-status.slewing { background-color: #7a4f1a; color: white; }
+
+.auto-status.hidden { display: none; }
+.auto-status.moving { background-color: #2a5298; color: white; }
+.auto-status.tracking { background-color: #1a7a3c; color: white; }
+
+.planet-card h3 {
+    margin: 0;
+}
+
+.ready {
+  color: rgb(0, 252, 0);
+}
+
+.arming {
+  color: orange;
 }

@@ -1,4 +1,7 @@
 let currentAction = null;
+let selectedPlanet = null;
+let isMoving = false;
+let wasMoving = false;
 
 async function mouseDown(action) {
     currentAction = action
@@ -11,15 +14,14 @@ async function mouseDown(action) {
     });
     const data = await response.json();
     document.getElementById("altitude").textContent = data.altitude;
-
 }
 
-async function mouseUp(action) {
+async function mouseUp(event, action) {
+    event.stopPropagation();
+    currentAction = null;
     const response = await fetch("/movement_unpressed", {
         method: "POST",
-        headers: {
-            "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: action })
     });
     const data = await response.json();
@@ -39,6 +41,32 @@ document.addEventListener("mouseup", async function () {
         currentAction = null;
     }
 });
+
+document.getElementById("set_pulse_form").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const delay = document.getElementById("delay").value;
+    
+    try {
+        const response = await fetch("/set_pulse", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            body: JSON.stringify({
+                delay: delay
+            })
+        });
+
+        const data = await response.json();
+
+
+    } catch (error) {
+        console.error("Request failed:", error);
+        alert("Could not reach the server.");
+    }
+});
+
 
 document.getElementById("move_to").addEventListener("submit", async function (e) {
     e.preventDefault();
@@ -65,6 +93,7 @@ document.getElementById("move_to").addEventListener("submit", async function (e)
         } else if (!response.ok) {
             alert(data.message || "Something went wrong.");
         } else {
+            setAutoStatus("slewing", `Az: ${azimuth}° Alt: ${altitude}°`);
             console.log("Move finished successfully.");
         }
     } catch (error) {
@@ -83,7 +112,6 @@ async function stop_move_to() {
     await fetch("/stop_move_to", {
         method: "POST"
     });
-    
 }
 
 document.addEventListener("DOMContentLoaded", () => {
@@ -135,15 +163,103 @@ document.addEventListener("DOMContentLoaded", () => {
     };
 });
 
+
+async function loadPlanets() {
+    const response = await fetch("/planets");
+    const planets = await response.json();
+
+    const container = document.getElementById("planet_list");
+    container.innerHTML = "";
+
+    planets.forEach(planet => {
+        const card = document.createElement("div");
+        card.className = "planet-card";
+        card.innerHTML = `
+            <img src="/static/images/${planet.image}" alt="${planet.name}">
+            <h3>${planet.name}</h3>
+        `;
+        card.addEventListener("click", (event) => onPlanetClick(event, planet));
+        container.appendChild(card);
+    });
+}
+
+function onPlanetClick(event, planet) {
+    document.querySelectorAll(".planet-card").forEach(c => c.classList.remove("selected"));
+    event.currentTarget.classList.add("selected");
+    selectedPlanet = planet;
+}
+
+function setAutoStatus(mode, planetName) {
+    const el = document.getElementById("auto_status");
+    el.classList.remove("hidden", "moving", "tracking");
+    if (mode === "moving") {
+        el.classList.add("moving");
+        el.innerHTML = `Moving to ${planetName}<span class="dots"></span>`;
+    } else if (mode === "tracking") {
+        el.classList.add("tracking");
+        el.innerHTML = `Tracking ${planetName}<span class="dots"></span>`;
+    } else if (mode === "slewing") {
+        el.classList.add("slewing");
+        el.innerHTML = `Slewing to coordinates — ${planetName}<span class="dots"></span>`;
+    } else {
+        el.classList.add("hidden");
+    }
+}
+
+async function moveToSelectedPlanet() {
+    if (!selectedPlanet) {
+        alert("No planet selected.");
+        return;
+    }
+    if (isMoving) {
+        alert("Already Moving!");
+        return;
+    }
+    setAutoStatus("moving", selectedPlanet.name);
+    await fetch("/select_planet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: selectedPlanet.name })
+    });
+}
+
+async function trackSelectedPlanet() {
+    if (!selectedPlanet) {
+        alert("No planet selected.");
+        return;
+    }
+    if (isMoving) {
+        alert("Already Moving!");
+        return;
+    }
+    setAutoStatus("tracking", selectedPlanet.name);
+    await fetch("/track_planet", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: selectedPlanet.name })
+    });
+}
+
 async function fetchStatus() {
     const response = await fetch("/status");
     const data = await response.json();
     document.getElementById("altitude").textContent = data.altitude;
     document.getElementById("azimuth").textContent = data.azimuth;
+    document.getElementById("pulse_delay").textContent = data.pulse_delay;
+    isMoving = data.moving;
+
+    if (wasMoving && !data.moving) {
+        setAutoStatus("hidden");
+    }
+    wasMoving = data.moving;
 
     const moving = data.moving ? "Yes" : "No";
     document.getElementById("moving").textContent = moving;
+    const el = document.getElementById("status");
+    el.textContent = data.sys_ready ? "System Ready" : "System Arming...";
+    el.className = data.sys_ready ? "ready" : "arming";
 }
 
 
 setInterval(fetchStatus, 100);
+loadPlanets();

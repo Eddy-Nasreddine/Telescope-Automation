@@ -8,7 +8,6 @@
 </head>
 
 <body>
-   
     <div class="container">
         <div class="controls_container">
             <h1>Telescope Dashboard</h1>
@@ -19,13 +18,13 @@
                 <div class="status-grid">
                     <div>
                         <strong>Altitude:</strong>
-                        <span id="altitude">0</span><span>&#176;</span>
+                        <span id="altitude"></span><span>&#176;</span>
                     </div>
                     <div>
                         <strong>Azimuth:</strong> 
-                        <span id="azimuth">0</span><span>&#176;</span>
+                        <span id="azimuth"></span><span>&#176;</span>
                     </div>
-                    <div><strong>Speed:</strong> <span>1</span></div>
+                    <div><strong>Pulse Delay:</strong> <span id="pulse_delay"></span></div>
                     <div><strong>Tracking:</strong> <span>Off</span></div>
                     <div><strong>Moving:</strong> <span id="moving">No</span></div>
                     <div><strong>Last Action:</strong> <span>None</span></div>
@@ -33,7 +32,7 @@
 
                 <p class="system-message">
                     <strong>System Message:</strong>
-                    <span>System ready</span>
+                    <span id="status"></span>
                 </p>
             </div>
 
@@ -42,14 +41,19 @@
                 <div class="manual-panel-content">
                     <div class="movement-grid" >
                         <div></div>
-                        <button onmousedown="mouseDown('up')" onmouseup="mouseUp('up')">Up</button>
+                        <button onmousedown="mouseDown('up')" onmouseup="mouseUp(event, 'up')">Up</button>
                         <div></div>
-                        <button onmousedown="mouseDown('left')" onmouseup="mouseUp('left')">Left</button>
+                        <button onmousedown="mouseDown('left')" onmouseup="mouseUp(event ,'left')">Left</button>
                         <button class="stop-btn" onclick="stop_move_to()">Stop</button>
-                        <button onmousedown="mouseDown('right')" onmouseup="mouseUp('right')">Right</button>
+                        <button onmousedown="mouseDown('right')" onmouseup="mouseUp(event, 'right')">Right</button>
                         <div></div>
-                        <button onmousedown="mouseDown('down')" onmouseup="mouseUp('down')">Down</button>
+                        <button onmousedown="mouseDown('down')" onmouseup="mouseUp(event, 'down')">Down</button>
                     </div>
+                    <form id="set_pulse_form">
+                        <Strong for="fname">Pulse Delay:</Strong><br>
+                        <input type="number" id="delay" name="delay" max="100" min="10"><br>
+                        <button type="submit" value="Submit">Submit</button>
+                    </form>
 
                     <div class="move-to">
                         <form id="move_to">
@@ -64,25 +68,17 @@
             </div>
 
             <div class="panel controls-panel">
-                <h2>System Controls</h2>
+                <h2>Automatic Controls</h2>
                 <div class="button-row">
-                    <button>Tracking On</button>
-                    <button>Tracking Off</button>
                     <button onclick="test()">Test</button>
-                </div>
-            </div>
-
-            <div class="panel controls-panel">
-                <h2>Speed Controls</h2>
-                <div class="button-row">
-                    <button>Speed -</button>
-                    <button>Speed +</button>
+                    <button onclick="moveToSelectedPlanet()">Move to Planet</button>
+                    <button onclick="trackSelectedPlanet()">Track Planet</button>
                 </div>
             </div>
 
             <div class="panel log-panel" style="margin-bottom: 50px;">
                 <h2>Response</h2>
-                <p>No commands sent yet.</p>
+                <div id="auto_status" class="auto-status hidden"></div>
             </div>
         </div>
          <div class="camera-container">
@@ -107,9 +103,9 @@
                         </div>
                     </div>
             </div>
+            <div id="planet_list"></div>
         </div>
     </div>
     <script src="{{ url_for('static', filename='script.js') }}"></script>
-    
 </body>
 </html>
