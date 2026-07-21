@@ -218,11 +218,21 @@ button:hover {
     text-align: center;
 }
 
+.planet-card.disabled {
+    opacity: 0.4;
+    filter: grayscale(100%);
+    cursor: not-allowed;
+}
+
+.auto-status.calibrating { background-color: #03b4e0; color: white; }
+
 @keyframes ellipsis {
     0%   { content: '.'; }
     33%  { content: '..'; }
     66%  { content: '...'; }
 }
+
+.hidden { display: none; }
 
 .auto-status .dots::after {
     content: '.';

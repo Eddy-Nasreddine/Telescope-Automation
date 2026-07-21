@@ -17,23 +17,34 @@
 
                 <div class="status-grid">
                     <div>
-                        <strong>Altitude:</strong>
-                        <span id="altitude"></span><span>&#176;</span>
+                        <strong>Elevation:</strong>
+                        <span id="elevation"></span><span>&#176;</span>
+
                     </div>
+                    <div>
+                        <strong>Elevation Err:</strong>
+                        <span id="elevation_error"></span><span>&#176;</span>
+                    </div>
+
                     <div>
                         <strong>Azimuth:</strong> 
                         <span id="azimuth"></span><span>&#176;</span>
                     </div>
+                    <div>
+                        <strong>Azimuth Err:</strong> 
+                        <span id="azimuth_error"></span><span>&#176;</span>
+                    </div>
+
                     <div><strong>Pulse Delay:</strong> <span id="pulse_delay"></span></div>
-                    <div><strong>Tracking:</strong> <span>Off</span></div>
+                    <div><strong>Latitude:</strong> <span id="latitude"></span></div>
                     <div><strong>Moving:</strong> <span id="moving">No</span></div>
-                    <div><strong>Last Action:</strong> <span>None</span></div>
+                    <div><strong>Longitude:</strong> <span id="longitude"></span></div>
                 </div>
 
-                <p class="system-message">
-                    <strong>System Message:</strong>
-                    <span id="status"></span>
-                </p>
+                <div class="status-grid" style="margin-top: 15px;">
+                    <div><strong>MCU connection:</strong> <span id="mcu_status"></span></div>
+                    <div><strong>GPS connection:</strong> <span id="gps_status"></span></div>
+                </div>
             </div>
 
             <div class="panel controls-panel">
@@ -73,6 +84,9 @@
                     <button onclick="test()">Test</button>
                     <button onclick="moveToSelectedPlanet()">Move to Planet</button>
                     <button onclick="trackSelectedPlanet()">Track Planet</button>
+                    <button onclick="startCalibration()">Calibrate</button>
+                    <button onclick="resetOrigin()">Reset Origin</button>
+                    <button id="finish_calibration_btn" class="hidden" onclick="finishCalibration()">Finish Calibration</button>
                 </div>
             </div>
 

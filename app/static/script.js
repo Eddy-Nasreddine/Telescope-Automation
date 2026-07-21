@@ -2,6 +2,8 @@ let currentAction = null;
 let selectedPlanet = null;
 let isMoving = false;
 let wasMoving = false;
+let wasCalibrating = false;
+let isCalibrating = false;
 
 async function mouseDown(action) {
     currentAction = action
@@ -174,11 +176,16 @@ async function loadPlanets() {
     planets.forEach(planet => {
         const card = document.createElement("div");
         card.className = "planet-card";
+        if (!planet.visible) {
+            card.classList.add("disabled");
+        }
         card.innerHTML = `
             <img src="/static/images/${planet.image}" alt="${planet.name}">
             <h3>${planet.name}</h3>
         `;
-        card.addEventListener("click", (event) => onPlanetClick(event, planet));
+        if (planet.visible) {
+            card.addEventListener("click", (event) => onPlanetClick(event, planet));
+        }
         container.appendChild(card);
     });
 }
@@ -201,8 +208,51 @@ function setAutoStatus(mode, planetName) {
     } else if (mode === "slewing") {
         el.classList.add("slewing");
         el.innerHTML = `Slewing to coordinates — ${planetName}<span class="dots"></span>`;
-    } else {
+    } else if (mode === "calibrating"){
+        el.classList.add("calibrating");
+        el.innerHTML = `Calibrating<span class="dots"></span>`;
+    }
+    else {
         el.classList.add("hidden");
+    }
+}
+
+async function resetOrigin() {
+    try {
+        const response = await fetch("/resetOrigin", { method: "POST" });
+        const data = await response.json();
+        if (response.status === 409) {
+            alert(data.message || "Telescope is already moving.");
+        } else if (response.status === 408) {
+            alert(data.message || "Telescope is calibrating.");
+        } else if (!response.ok) {
+            alert(data.message || "Something went wrong.");
+        }
+    } catch (error) {
+        console.error("Request failed:", error);
+        alert("Could not reach the server.");
+    }
+}
+
+async function finishCalibration() {
+    await fetch("/finishCalibration", { method: "POST" });
+}
+
+async function startCalibration() {
+    try {
+        const response = await fetch("/startCalibration", { method: "POST" });
+        const data = await response.json();
+        if (response.status === 409) {
+            alert(data.message || "Telescope is already calibrating.");
+            return;
+        } else if (!response.ok) {
+            alert(data.message || "Something went wrong.");
+            return;
+        }
+        setAutoStatus("calibrating");
+    } catch (error) {
+        console.error("Request failed:", error);
+        alert("Could not reach the server.");
     }
 }
 
@@ -213,6 +263,10 @@ async function moveToSelectedPlanet() {
     }
     if (isMoving) {
         alert("Already Moving!");
+        return;
+    }
+     if (isCalibrating){
+        alert("System is Calibrating!");
         return;
     }
     setAutoStatus("moving", selectedPlanet.name);
@@ -232,6 +286,10 @@ async function trackSelectedPlanet() {
         alert("Already Moving!");
         return;
     }
+    if (isCalibrating){
+        alert("System is Calibrating!");
+        return;
+    }
     setAutoStatus("tracking", selectedPlanet.name);
     await fetch("/track_planet", {
         method: "POST",
@@ -243,21 +301,41 @@ async function trackSelectedPlanet() {
 async function fetchStatus() {
     const response = await fetch("/status");
     const data = await response.json();
-    document.getElementById("altitude").textContent = data.altitude;
+    document.getElementById("elevation").textContent = data.altitude;
     document.getElementById("azimuth").textContent = data.azimuth;
     document.getElementById("pulse_delay").textContent = data.pulse_delay;
+    document.getElementById("latitude").textContent = data.latitude;
+    document.getElementById("longitude").textContent = data.longitude;
+    document.getElementById("azimuth_error").textContent = data.azimuth_error
+    document.getElementById("elevation_error").textContent = data.elevation_error
+    document.getElementById("finish_calibration_btn").classList.toggle("hidden", !data.calibrating);
+
+    isCalibrating = data.calibrating;
     isMoving = data.moving;
 
-    if (wasMoving && !data.moving) {
+    if (wasMoving && !data.moving && !data.calibrating) {
         setAutoStatus("hidden");
     }
     wasMoving = data.moving;
 
+    if (data.calibrating && !wasCalibrating) {
+    setAutoStatus("calibrating");
+}
+    if (wasCalibrating && !data.calibrating) {
+        setAutoStatus("hidden");
+    }
+    wasCalibrating = data.calibrating;
+
     const moving = data.moving ? "Yes" : "No";
     document.getElementById("moving").textContent = moving;
-    const el = document.getElementById("status");
-    el.textContent = data.sys_ready ? "System Ready" : "System Arming...";
-    el.className = data.sys_ready ? "ready" : "arming";
+
+    const gps_el = document.getElementById("gps_status");
+    gps_el.textContent = data.gps_ready ? "Established" : "Waiting for GPS lock...";
+    gps_el.className = data.gps_ready ? "ready" : "arming";
+
+    const mcu_el = document.getElementById("mcu_status");
+    mcu_el.textContent = data.sys_ready ? "Established" : "Waiting for UART connection...";
+    mcu_el.className = data.sys_ready ? "ready" : "arming";
 }
 
 

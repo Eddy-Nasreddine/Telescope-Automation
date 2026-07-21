@@ -2,7 +2,6 @@ from flask import Flask, jsonify, render_template, request, Response
 from MotorController import StepperMotor
 from TelescopeController import TelescopeController
 from CelestialObject import CelestialObject
-from Angle import Angle 
 import threading
 from time import sleep 
 from CameraStream import CameraStream
@@ -44,21 +43,38 @@ def index():
 @app.route("/status", methods=["GET"])
 def status():
     return jsonify({
-        "altitude": round(TelescopeController.current_alt, 3),
+        "altitude": round(TelescopeController.current_el, 3),
         "azimuth" : round(TelescopeController.current_az, 3),
+        "azimuth_error": round(TelescopeController.error_az, 3),
+        "elevation_error": round(TelescopeController.error_el, 3),
         "moving": TelescopeController.moving,
         "sys_ready": TelescopeController.sys_ready,
+        "gps_ready": TelescopeController.GpsUartReceiver.has_fix,
+        "longitude": TelescopeController.GpsUartReceiver.lon,
+        "latitude": TelescopeController.GpsUartReceiver.lat,
         "pulse_delay": TelescopeController.pulse_delay,
+        "calibrating": TelescopeController.calibrating,
     })
 
 
 @app.route("/movement_pressed", methods=["POST"])
 def movement_pressed():
-    data = request.get_json()
-    action = data.get("action")
-    print(f"Move {action} button was pressed down")
-    TelescopeController.jog(action)
-    return jsonify({"status": "ok"})
+    if TelescopeController.moving:
+        return jsonify({
+            "status": "busy",
+            "message": "Telescope is already moving.",
+        }), 409
+    try:  
+        data = request.get_json()
+        action = data.get("action")
+        print(f"Move {action} button was pressed down")
+        TelescopeController.jog(action)
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+        }), 500
 
     
 @app.route("/movement_unpressed", methods=["POST"])
@@ -72,13 +88,24 @@ def movement_unpressed():
 
 @app.route("/set_pulse", methods=["POST"])
 def set_pulse():
-    data = request.get_json()
-    delay = int(data.get("delay"))
-    TelescopeController.set_pulse(delay)
-    return jsonify({
-        "status": "ok"
-    })
-    
+    if TelescopeController.moving:
+        return jsonify({
+            "status": "busy",
+            "message": "Telescope is already moving.",
+        }), 409
+    try:
+        data = request.get_json()
+        delay = int(data.get("delay"))
+        TelescopeController.set_pulse(delay)
+        return jsonify({
+            "status": "ok"
+        })
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+        }), 500
+        
     
 @app.route("/move_to", methods=["POST"])
 def move_to():
@@ -87,14 +114,18 @@ def move_to():
             "status": "busy",
             "message": "Telescope is already moving.",
         }), 409
+    if TelescopeController.calibrating:
+         return jsonify({
+            "status": "busy",
+            "message": "Telescope is calibrating.",
+        }), 409
     try:
         data = request.get_json()
-        altitude = float(data.get("altitude"))
+        elevation = float(data.get("altitude"))
         azimuth = float(data.get("azimuth"))
-        print(f"Move to: altitude: {altitude} | azimuth: {azimuth}")
-        angle = Angle(altitude, azimuth)
-        TelescopeController.move_to(angle)   
-        print(f"Finished Moving to altitude: {altitude}|azimuth: {azimuth}")
+        print(f"Move to: altitude: {elevation} | azimuth: {azimuth}")
+        TelescopeController.move_to((elevation, azimuth))   
+        print(f"Finished Moving to altitude: {elevation}|azimuth: {azimuth}")
         return jsonify({"status": "ok"})
     except Exception as e:
         return jsonify({
@@ -132,7 +163,7 @@ def update_camera():
 
 @app.route("/planets")
 def get_planets():
-    return jsonify([
+    planets = [
         {"name": "Moon", "image": "moon.png"},
         {"name": "Mercury", "image": "mercury.png"},
         {"name": "Venus", "image": "venus.png"},
@@ -141,36 +172,132 @@ def get_planets():
         {"name": "Saturn", "image": "saturn.png"},
         {"name": "Uranus", "image": "uranus.png"},
         {"name": "Neptune", "image": "neptune.png"}
-    ])
+    ]
+    
+    coords = TelescopeController.GpsUartReceiver.get_coords()
+    for planet in planets:
+        cel_obj = CelestialObject(planet["name"])
+        if cel_obj.get_astrometric_coords(coords)[0].degrees < 25:
+            planet["visible"] = False
+        else:
+            planet["visible"] = True
+    return jsonify(planets)
     
     
 @app.route("/select_planet", methods=["POST"])
 def select_planet():
-    data = request.get_json()
-    planet = data.get("name")
-    print(f"Move to: {planet}")
-    cel_object = CelestialObject(planet)
-    TelescopeController.move_to_object(cel_object)
-    return jsonify({"status": "ok"}) 
-
+    print(f"cal: {TelescopeController.calibrating}, mov:{TelescopeController.moving}")
+    if TelescopeController.moving:
+        return jsonify({
+            "status": "busy",
+            "message": "Telescope is already moving.",
+        }), 409
+    if TelescopeController.calibrating:
+         return jsonify({
+            "status": "busy",
+            "message": "Telescope is calibrating.",
+        }), 408
+    try:
+        data = request.get_json()
+        planet = data.get("name")
+        print(f"Move to: {planet}")
+        cel_object = CelestialObject(planet)
+        TelescopeController.move_to_object(cel_object)
+        return jsonify({"status": "ok"}) 
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+        }), 500
 
 @app.route("/track_planet", methods=["POST"])
 def track_planet():
-    data = request.get_json()
-    planet = data.get("name")
-    print(f"Live track: {planet}")
-    cel_object = CelestialObject(planet)
-    TelescopeController.track_object()
-    return jsonify({"status": "ok"})
+    if TelescopeController.moving:
+        return jsonify({
+            "status": "busy",
+            "message": "Telescope is already moving.",
+        }), 409
+    if TelescopeController.calibrating:
+        return jsonify({
+            "status": "busy",
+            "message": "Telescope is calibrating.",
+        }), 409
+    try:
+        data = request.get_json()
+        planet = data.get("name")
+        print(f"Live track: {planet}")
+        cel_object = CelestialObject(planet)
+        TelescopeController.track_object()
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+        }), 500
 
+@app.route("/startCalibration", methods=["POST"])
+def startCalibration():
+    if TelescopeController.calibrating:
+        return jsonify({
+            "status": "busy",
+            "message": "Telescope is already calibrating.",
+        }), 409
+    try:
+        TelescopeController.calibrate()
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+        }), 500
+        
+@app.route("/resetOrigin", methods=["POST"])
+def resetOrigin():
+    if TelescopeController.moving:
+        return jsonify({
+            "status": "busy",
+            "message": "Telescope is already moving.",
+        }), 409
+    if TelescopeController.calibrating:
+         return jsonify({
+            "status": "busy",
+            "message": "Telescope is calibrating.",
+        }), 408
+    try:
+        TelescopeController.reset_origin()
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+        }), 500
+     
+@app.route("/finishCalibration", methods=["POST"])
+def finishCalibration():
+    if TelescopeController.moving:
+        return jsonify({
+            "status": "busy",
+            "message": "Telescope is already moving.",
+        }), 409
+    try:  
+        TelescopeController.finish_calibration()
+        return jsonify({"status": "ok"})
+    except Exception as e:
+        return jsonify({
+            "status": "error",
+            "message": str(e),
+        }), 500
+        
 
 @app.route("/test", methods=["POST"])
 def test():
     print("test was called")
-    cel_object = CelestialObject("jupiter")
-    print(cel_object.get_astrometric_coords())
+    # cel_object = CelestialObject("saturn")
+    # cel = cel_object.get_astrometric_coords((53.62300344381324, -113.51295247822964))
+    # print("ALKSHJFF", cel[0].degrees,":" ,cel[1].degrees)
+    print("calibreation:", TelescopeController.calibrating)
     # TelescopeController.move_to_object(cel_object)
-
+    
     # angle = Angle(95,95)
     # TelescopeController.move_to(angle)
     return jsonify({"status": "ok"})
