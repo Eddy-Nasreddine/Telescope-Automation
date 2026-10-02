@@ -156,6 +156,8 @@ bash scripts/hotspot.sh off      # back to home Wi-Fi
 
 Run `on` while still at home (your SSH session will drop as the Pi switches over). The hotspot stays on through reboots, so outside you just power up the Pi, join its network, SSH in to start the app, and open `http://10.42.0.1:5000`. Run `off` to return to home Wi-Fi.
 
+Switching drops the SSH session you ran it from, so the switch runs as a background job that finishes regardless. If the new network doesn't come up within 30 s (for example, `off` with no home Wi-Fi in range), the Pi goes back to the network it was on, so it never ends up unreachable. `status` shows the last switch's log.
+
 Without internet the Pi's clock can't be trusted, so planet positions use GPS time once the module has a fix, and the laptop's clock (sent by the dashboard) until then. The **Time source** row in Telemetry shows which is in use.
 
 ---
