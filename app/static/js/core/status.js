@@ -3,7 +3,7 @@
 import { SLEW_START_TIMEOUT_MS, STATUS_POLL_MS, STATUS_RETRY_MS } from "../config.js";
 import { state } from "../state.js";
 import { restingMode, setMode } from "./mode.js";
-import { renderHud } from "../panels/camera.js";
+import { renderHud, syncCameraHealth } from "../panels/camera.js";
 import { logEvent, warnUser } from "../panels/log.js";
 import { syncSpeedSlider } from "../panels/manual.js";
 import { moveSkyScope } from "../panels/sky.js";
@@ -34,11 +34,14 @@ function render(data) {
     renderHud(data);
     moveSkyScope(data.altitude, data.azimuth);
     syncSpeedSlider(data.pulse_delay);
+    syncCameraHealth(data.camera_ok);
 }
 
 function logLinkChanges(prev, data, first) {
     if (data.sys_ready && !prev.sys_ready) {
         logEvent("ok", "MCU link established over UART.");
+    } else if (!data.sys_ready && prev.sys_ready) {
+        warnUser("Lost the MCU link. Check the UART connection.", "err");
     } else if (first && !data.sys_ready) {
         logEvent("info", "Waiting for the MCU handshake…");
     }
@@ -67,7 +70,16 @@ function updateMode(prev, data, first) {
         logEvent("ok", `Calibration finished. Offset az ${signed(data.azimuth_error, 3)}°, el ${signed(data.elevation_error, 3)}°.`);
     }
 
-    if (prev.moving && !data.moving && !data.calibrating && state.mode !== "jogging") {
+    // Tracking runs on the Pi, so /status is the source of truth for it
+    if (data.tracking && state.mode !== "jogging"
+            && (state.mode !== "tracking" || state.modeTarget !== data.tracking)) {
+        setMode("tracking", data.tracking);
+    } else if (!data.tracking && prev.tracking) {
+        logEvent("info", `Tracking ${prev.tracking} stopped.`);
+        if (state.mode === "tracking") setMode(restingMode());
+    }
+
+    if (prev.moving && !data.moving && !data.calibrating && !data.tracking && state.mode !== "jogging") {
         if (state.mode === "slewing") {
             logEvent("ok", `Arrived at ${state.modeTarget || "target"}. Final position az ${fixed(data.azimuth, 2)}°, el ${fixed(data.altitude, 2)}°.`);
         }

@@ -19,7 +19,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/panels/targets.css') }}">
 </head>
 
-<body>
+<!-- Limits come from app/config.py so the front end never has its own copy -->
+<body data-min-elevation="{{ min_visible_elevation }}">
     <canvas id="starfield" aria-hidden="true"></canvas>
 
     <div class="app">
@@ -111,6 +112,7 @@
                         <div><dt>MCU link</dt><dd id="mcu_status">&mdash;</dd></div>
                         <div><dt>GPS fix</dt><dd id="gps_status">&mdash;</dd></div>
                         <div><dt>Calibrating</dt><dd id="calibrating">No</dd></div>
+                        <div title="Net azimuth turn from home; the motor cable is untwisted at 0"><dt>Cable wrap</dt><dd id="az_wrap">&mdash;</dd></div>
                     </dl>
                 </article>
 
@@ -165,7 +167,7 @@
                                     </label>
                                     <label class="input-unit">
                                         <span>El</span>
-                                        <input type="number" id="move_altitude" min="0" max="90" step="0.01" placeholder="45.00">
+                                        <input type="number" id="move_altitude" min="{{ '%g' % el_min }}" max="{{ '%g' % el_max }}" step="0.01" placeholder="45.00">
                                         <span>&deg;</span>
                                     </label>
                                 </div>

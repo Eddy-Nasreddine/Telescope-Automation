@@ -112,6 +112,7 @@ export function renderTelemetry(data) {
     setStatusText("calibrating", data.calibrating ? "Yes" : "No", data.calibrating ? "is-active" : "");
     setStatusText("mcu_status", data.sys_ready ? "Connected" : "Waiting for UART…", data.sys_ready ? "is-ok" : "is-wait");
     setStatusText("gps_status", data.gps_ready ? "Fix acquired" : "Waiting for fix…", data.gps_ready ? "is-ok" : "is-wait");
+    $("az_wrap").textContent = isNumber(data.az_wrap) ? `${signed(data.az_wrap, 1)}°` : "—";
 
     updateAzDial(data.azimuth);
     updateElGauge(data.altitude);

@@ -5,7 +5,9 @@ export const STATUS_RETRY_MS = 1000;
 export const PLANET_REFRESH_MS = 30000;
 export const SLEW_START_TIMEOUT_MS = 4000;
 export const CAMERA_CONNECT_TIMEOUT_MS = 10000; // no first frame by then = no signal
-export const MIN_ELEVATION = 25; // must match the visibility cutoff in app.py /planets
+export const JOG_HEARTBEAT_MS = 200; // must be well under JOG_HEARTBEAT_TIMEOUT in config.py
+// Rendered into <body data-min-elevation> from config.py, so there's one source of truth
+export const MIN_ELEVATION = Number(document.body.dataset.minElevation) || 25;
 export const LOG_LIMIT = 200;
 export const THEME_KEY = "telescope.theme";
 

@@ -86,6 +86,14 @@ function connectStream() {
     }, CAMERA_CONNECT_TIMEOUT_MS);
 }
 
+// /status reports whether frames are still arriving. A stream that stops
+// mid-session doesn't fire an error on the <img>, so this is how we notice.
+export function syncCameraHealth(cameraOk) {
+    if (cameraState === "live" && cameraOk === false) {
+        markOffline();
+    }
+}
+
 /* ---------- HUD ---------- */
 
 export function renderHud(data) {

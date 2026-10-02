@@ -37,7 +37,7 @@ async function resetOrigin() {
     disarmReset();
     const result = await post("/resetOrigin", undefined, "Reset origin");
     if (result.ok) {
-        logEvent("warn", "Origin reset. Position is now az 90°, el 90°.");
+        logEvent("warn", "Origin reset. The mount now counts its position from home.");
     }
 }
 

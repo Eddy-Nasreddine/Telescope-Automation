@@ -28,9 +28,10 @@ export async function post(path, body, label) {
     }
 
     if (!response.ok) {
-        const busy = response.status === 409 || response.status === 408;
+        // 400 = refused (out of range, below the horizon...), 409 = busy: warnings, not faults
+        const refused = response.status === 400 || response.status === 409;
         const reason = data.message || `request failed (HTTP ${response.status})`;
-        warnUser(`${label}: ${reason}`, busy ? "warn" : "err");
+        warnUser(`${label}: ${reason}`, refused ? "warn" : "err");
     }
     return { ok: response.ok, status: response.status, data };
 }
