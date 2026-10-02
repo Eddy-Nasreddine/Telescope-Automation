@@ -1,0 +1,136 @@
+/* 05 Sky view: the alt/az dome drawn by js/panels/sky.js. */
+
+.sky-dome {
+    display: block;
+    width: 100%;
+    max-width: 320px;
+    margin: 0 auto;
+}
+
+.sky-disc {
+    fill: var(--sky-disc);
+    stroke: var(--line);
+    stroke-width: 1.5;
+}
+
+.sky-ring {
+    fill: none;
+    stroke: var(--line-soft);
+    stroke-width: 1;
+}
+
+.sky-ring-min {
+    fill: none;
+    stroke: var(--amber-line);
+    stroke-width: 1;
+    stroke-dasharray: 3 4;
+}
+
+.sky-spoke {
+    stroke: var(--line-soft);
+    stroke-width: 1;
+}
+
+.sky-label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    fill: var(--text-dim);
+    text-anchor: middle;
+    dominant-baseline: central;
+}
+
+.sky-label.north {
+    fill: var(--amber);
+}
+
+.sky-ring-label {
+    font-family: var(--font-mono);
+    font-size: 8px;
+    fill: var(--text-faint);
+}
+
+.sky-star {
+    fill: rgb(var(--star-rgb));
+}
+
+.sky-planet {
+    cursor: pointer;
+}
+
+.sky-planet circle.body {
+    stroke: var(--sky-disc);
+    stroke-width: 1.5;
+}
+
+.sky-planet text {
+    font-family: var(--font-sans);
+    font-size: 9px;
+    fill: var(--text-dim);
+}
+
+.sky-planet.is-low {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.sky-planet.is-selected text {
+    fill: var(--amber);
+}
+
+.sky-planet .select-ring {
+    fill: none;
+    stroke: var(--amber);
+    stroke-width: 1.5;
+    opacity: 0;
+}
+
+.sky-planet.is-selected .select-ring {
+    opacity: 1;
+}
+
+:root[data-theme="night"] .sky-planet circle.body {
+    fill: var(--text-dim);
+}
+
+.sky-target {
+    fill: none;
+    stroke: var(--amber);
+    stroke-width: 1.5;
+}
+
+.sky-scope {
+    fill: none;
+    stroke: var(--teal);
+    stroke-width: 1.8;
+}
+
+.sky-scope .scope-halo {
+    stroke: var(--teal-soft);
+    stroke-width: 6;
+}
+
+.sky-legend {
+    display: flex;
+    justify-content: center;
+    gap: 16px;
+    margin-top: 8px;
+    font-size: 11px;
+    color: var(--text-faint);
+}
+
+.sky-legend span {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.lg {
+    display: inline-block;
+    width: 11px;
+    height: 11px;
+    border-radius: 50%;
+}
+
+.lg-scope { border: 2px solid var(--teal); }
+.lg-target { border: 2px solid var(--amber); }
+.lg-min { border: 1px dashed var(--amber-line); }

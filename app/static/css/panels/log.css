@@ -1,0 +1,52 @@
+/* 04 Event log. */
+
+.log {
+    height: 190px;
+    margin: 0;
+    padding: 8px 10px;
+    overflow-y: auto;
+    list-style: none;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    background: var(--panel-inset);
+    border: 1px solid var(--line-soft);
+    border-radius: var(--radius);
+}
+
+.log-entry {
+    display: grid;
+    grid-template-columns: auto 44px minmax(0, 1fr);
+    gap: 10px;
+    padding: 2px 0;
+    animation: log-in 0.25s ease-out;
+}
+
+.log-entry time {
+    color: var(--text-faint);
+}
+
+.log-tag {
+    font-weight: 700;
+    text-align: center;
+}
+
+.log-msg {
+    color: var(--text-dim);
+    overflow-wrap: anywhere;
+}
+
+.log-info .log-tag { color: var(--blue); }
+.log-ok .log-tag { color: var(--teal); }
+.log-warn .log-tag { color: var(--amber); }
+.log-err .log-tag { color: var(--red); }
+.log-warn .log-msg { color: var(--text); }
+.log-err .log-msg { color: var(--red); }
+
+.log-empty {
+    color: var(--text-faint);
+}
+
+@keyframes log-in {
+    from { opacity: 0; transform: translateX(-4px); }
+    to { opacity: 1; transform: none; }
+}

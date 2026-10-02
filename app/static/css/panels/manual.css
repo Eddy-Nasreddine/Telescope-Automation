@@ -1,0 +1,102 @@
+/* 02 Manual control: jog pad, stop button and the go-to form layout. */
+
+.manual {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.jog-wrap {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.jog-pad {
+    display: grid;
+    grid-template-columns: repeat(3, 62px);
+    grid-template-rows: repeat(3, 62px);
+    gap: 8px;
+    padding: 10px;
+    background: var(--panel-inset);
+    border: 1px solid var(--line-soft);
+    border-radius: 50%;
+}
+
+.jog {
+    display: grid;
+    place-items: center;
+    padding: 0;
+    background: var(--panel-solid);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    cursor: pointer;
+    touch-action: none;
+    user-select: none;
+    transition: background-color 0.12s ease, border-color 0.12s ease, box-shadow 0.12s ease;
+}
+
+.jog svg {
+    width: 26px;
+    height: 26px;
+    fill: none;
+    stroke: var(--text-dim);
+    stroke-width: 2.2;
+    stroke-linecap: round;
+    stroke-linejoin: round;
+}
+
+.jog:hover {
+    border-color: var(--text-faint);
+}
+
+.jog.is-pressed {
+    background: var(--teal-soft);
+    border-color: var(--teal);
+    box-shadow: 0 0 14px var(--teal-soft), inset 0 0 10px var(--teal-soft);
+}
+
+.jog.is-pressed svg {
+    stroke: var(--teal);
+}
+
+.jog-stop {
+    padding: 0;
+    font-family: var(--font-mono);
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: #fff4f1;
+    background: #b8382c;
+    border: 3px solid var(--red-line);
+    border-radius: 50%;
+    box-shadow: 0 0 0 3px var(--panel-inset), 0 0 16px rgba(255, 90, 70, 0.35);
+    cursor: pointer;
+    transition: transform 0.05s ease, background-color 0.12s ease;
+}
+
+.jog-stop:hover {
+    background: #cf4234;
+}
+
+.jog-stop:active {
+    transform: scale(0.95);
+}
+
+:root[data-theme="night"] .jog-stop {
+    color: #ffcbbd;
+    background: #7a160b;
+}
+
+.hint {
+    font-size: 11px;
+    color: var(--text-faint);
+}
+
+.manual-side {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}

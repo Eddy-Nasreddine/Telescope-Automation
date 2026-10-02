@@ -177,10 +177,12 @@ def get_planets():
     coords = TelescopeController.GpsUartReceiver.get_coords()
     for planet in planets:
         cel_obj = CelestialObject(planet["name"])
-        if cel_obj.get_astrometric_coords(coords)[0].degrees < 25:
-            planet["visible"] = False
-        else:
-            planet["visible"] = True
+        altaz = cel_obj.get_astrometric_coords(coords)
+        altitude = altaz[0].degrees
+        azimuth = altaz[1].degrees
+        planet["altitude"] = round(altitude, 2)
+        planet["azimuth"] = round(azimuth, 2)
+        planet["visible"] = altitude >= 25
     return jsonify(planets)
     
     

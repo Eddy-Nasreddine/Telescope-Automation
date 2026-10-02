@@ -1,0 +1,115 @@
+/* 06 Targets: planet cards and the selected-target action bar. */
+
+.target-list {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+}
+
+.target-card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 9px 4px 8px;
+    text-align: center;
+    background: var(--panel-inset);
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: border-color 0.15s ease, background-color 0.15s ease, opacity 0.15s ease;
+}
+
+.target-card:hover {
+    border-color: var(--text-faint);
+}
+
+.target-card img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    filter: var(--media-filter);
+}
+
+.target-name {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.target-alt {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    color: var(--text-faint);
+    font-variant-numeric: tabular-nums;
+}
+
+.target-flag {
+    position: absolute;
+    top: 7px;
+    right: 7px;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--teal);
+}
+
+.target-card.is-unavailable {
+    opacity: 0.42;
+    cursor: not-allowed;
+}
+
+.target-card.is-unavailable img {
+    filter: grayscale(1) var(--media-filter);
+}
+
+.target-card.is-unavailable .target-flag {
+    background: var(--text-faint);
+}
+
+.target-card.is-selected {
+    background: var(--amber-soft);
+    border-color: var(--amber);
+}
+
+.target-card.is-selected .target-name {
+    color: var(--amber);
+}
+
+.target-empty {
+    grid-column: 1 / -1;
+    padding: 18px 0;
+    font-size: 12px;
+    text-align: center;
+    color: var(--text-faint);
+}
+
+.target-actions {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--line-soft);
+}
+
+.selected-label {
+    display: flex;
+    flex-direction: column;
+    margin-right: auto;
+    line-height: 1.25;
+}
+
+.selected-label span {
+    font-family: var(--font-mono);
+    font-size: 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+}
+
+.selected-label strong {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--amber);
+}

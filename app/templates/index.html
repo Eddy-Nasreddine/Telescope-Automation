@@ -1,125 +1,294 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="cosmos">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telescope HUD</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <title>Telescope Control</title>
+    <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='15' fill='%230b0e24'/%3E%3Ccircle cx='16' cy='16' r='8' fill='none' stroke='%235fe0b7' stroke-width='2'/%3E%3Cpath d='M16 3v6M16 23v6M3 16h6M23 16h6' stroke='%235fe0b7' stroke-width='2'/%3E%3Ccircle cx='16' cy='16' r='2' fill='%23f4c27a'/%3E%3C/svg%3E">
+    <!-- Order matters: tokens -> base -> layout -> components -> panels -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base/tokens.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base/base.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base/layout.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/base/components.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panels/topbar.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panels/telemetry.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panels/manual.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panels/camera.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panels/log.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panels/sky.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/panels/targets.css') }}">
 </head>
 
 <body>
-    <div class="container">
-        <div class="controls_container">
-            <h1>Telescope Dashboard</h1>
+    <canvas id="starfield" aria-hidden="true"></canvas>
 
-            <div class="panel status-panel">
-                <h2>Status</h2>
-
-                <div class="status-grid">
-                    <div>
-                        <strong>Elevation:</strong>
-                        <span id="elevation"></span><span>&#176;</span>
-
-                    </div>
-                    <div>
-                        <strong>Elevation Err:</strong>
-                        <span id="elevation_error"></span><span>&#176;</span>
-                    </div>
-
-                    <div>
-                        <strong>Azimuth:</strong> 
-                        <span id="azimuth"></span><span>&#176;</span>
-                    </div>
-                    <div>
-                        <strong>Azimuth Err:</strong> 
-                        <span id="azimuth_error"></span><span>&#176;</span>
-                    </div>
-
-                    <div><strong>Pulse Delay:</strong> <span id="pulse_delay"></span></div>
-                    <div><strong>Latitude:</strong> <span id="latitude"></span></div>
-                    <div><strong>Moving:</strong> <span id="moving">No</span></div>
-                    <div><strong>Longitude:</strong> <span id="longitude"></span></div>
-                </div>
-
-                <div class="status-grid" style="margin-top: 15px;">
-                    <div><strong>MCU connection:</strong> <span id="mcu_status"></span></div>
-                    <div><strong>GPS connection:</strong> <span id="gps_status"></span></div>
+    <div class="app">
+        <!-- ===== Top bar: identity, link lamps, mode, clocks ===== -->
+        <header class="topbar">
+            <div class="brand">
+                <svg class="brand-mark" viewBox="0 0 40 40" aria-hidden="true">
+                    <circle cx="20" cy="20" r="17" class="brand-ring"/>
+                    <circle cx="20" cy="20" r="9" class="brand-ring brand-ring-inner"/>
+                    <path d="M20 1v8M20 31v8M1 20h8M31 20h8" class="brand-cross"/>
+                    <circle cx="27" cy="12" r="3" class="brand-planet"/>
+                </svg>
+                <div>
+                    <h1>Telescope Control</h1>
+                    <p class="brand-sub">Alt-az mount &middot; Raspberry Pi + STM32</p>
                 </div>
             </div>
 
-            <div class="panel controls-panel">
-                <h2>Manual Controls</h2>
-                <div class="manual-panel-content">
-                    <div class="movement-grid" >
-                        <div></div>
-                        <button onmousedown="mouseDown('up')" onmouseup="mouseUp(event, 'up')">Up</button>
-                        <div></div>
-                        <button onmousedown="mouseDown('left')" onmouseup="mouseUp(event ,'left')">Left</button>
-                        <button class="stop-btn" onclick="stop_move_to()">Stop</button>
-                        <button onmousedown="mouseDown('right')" onmouseup="mouseUp(event, 'right')">Right</button>
-                        <div></div>
-                        <button onmousedown="mouseDown('down')" onmouseup="mouseUp(event, 'down')">Down</button>
-                    </div>
-                    <form id="set_pulse_form">
-                        <Strong for="fname">Pulse Delay:</Strong><br>
-                        <input type="number" id="delay" name="delay" max="100" min="10"><br>
-                        <button type="submit" value="Submit">Submit</button>
-                    </form>
-
-                    <div class="move-to">
-                        <form id="move_to">
-                            <Strong for="fname">Azimuth:</Strong><br>
-                            <input type="number" id="move_azimuth" name="azimuth" step="0.01"><br>
-                            <Strong for="lname">Altitude:</Strong><br>
-                            <input type="number" id="move_altitude" name="altitude" max="90" min="0" step="0.01"><br><br>
-                            <button type="submit" value="Submit">Submit</button>
-                        </form> 
-                    </div>
+            <div class="lamps" role="status" aria-label="System links">
+                <div class="lamp" id="lamp_server" data-state="wait" title="Connection to the Flask server on the Pi">
+                    <span class="lamp-dot"></span><span class="lamp-label">Server</span>
+                </div>
+                <div class="lamp" id="lamp_mcu" data-state="wait" title="UART link to the STM32">
+                    <span class="lamp-dot"></span><span class="lamp-label">MCU</span>
+                </div>
+                <div class="lamp" id="lamp_gps" data-state="wait" title="GPS fix">
+                    <span class="lamp-dot"></span><span class="lamp-label">GPS</span>
+                </div>
+                <div class="lamp" id="lamp_motion" data-state="off" title="Motors moving">
+                    <span class="lamp-dot"></span><span class="lamp-label">Motion</span>
                 </div>
             </div>
 
-            <div class="panel controls-panel">
-                <h2>Automatic Controls</h2>
-                <div class="button-row">
-                    <button onclick="test()">Test</button>
-                    <button onclick="moveToSelectedPlanet()">Move to Planet</button>
-                    <button onclick="trackSelectedPlanet()">Track Planet</button>
-                    <button onclick="startCalibration()">Calibrate</button>
-                    <button onclick="resetOrigin()">Reset Origin</button>
-                    <button id="finish_calibration_btn" class="hidden" onclick="finishCalibration()">Finish Calibration</button>
-                </div>
+            <div class="mode-pill" id="mode_pill" data-mode="idle">
+                <span class="mode-dot"></span>
+                <span id="mode_text">Idle</span>
             </div>
 
-            <div class="panel log-panel" style="margin-bottom: 50px;">
-                <h2>Response</h2>
-                <div id="auto_status" class="auto-status hidden"></div>
+            <div class="clocks">
+                <div class="clock"><span class="clock-label">Local</span><span class="clock-value" id="clock_local">--:--:--</span></div>
+                <div class="clock"><span class="clock-label">UTC</span><span class="clock-value" id="clock_utc">--:--:--</span></div>
+                <div class="clock" title="Local sidereal time, from GPS longitude"><span class="clock-label">LST</span><span class="clock-value" id="clock_lst">--:--:--</span></div>
             </div>
-        </div>
-         <div class="camera-container">
-            <img src="/video_feed" alt="Live Stream" id="camera-stream">
-            <div class="panel camera_controls">
-                <h2>Camera Controls</h2>
-                    <div style="display: flex; flex-direction:column; gap: 20px;">
-                        <div class="camera-control-row">
-                            <strong style="width: 130px;">Brightness:</strong>
-                            <input type="range" min="-64" max="64" value="0" class="slider" id="brightnessRange">
-                            <span id="brightnessValue"></span>
+
+            <button class="btn btn-ghost night-toggle" id="night_toggle" type="button" aria-pressed="false" title="Night vision mode (N)">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/></svg>
+                <span>Night vision</span>
+            </button>
+        </header>
+
+        <main class="grid">
+            <!-- ===== Left column: telemetry + manual control ===== -->
+            <section class="col col-left">
+                <article class="panel">
+                    <header class="panel-head">
+                        <span class="panel-code">01</span>
+                        <h2>Telemetry</h2>
+                        <span class="panel-rule"></span>
+                        <span class="panel-meta">10 Hz</span>
+                    </header>
+
+                    <div class="gauges">
+                        <figure class="gauge">
+                            <svg id="az_dial" class="dial" viewBox="0 0 120 120" aria-hidden="true"></svg>
+                            <figcaption>
+                                <span class="readout-label">Azimuth</span>
+                                <span class="readout"><span id="azimuth">---.---</span>&deg;</span>
+                                <span class="readout-sub">err <span id="azimuth_error">0.000</span>&deg;</span>
+                            </figcaption>
+                        </figure>
+                        <figure class="gauge">
+                            <svg id="el_gauge" class="dial" viewBox="0 0 120 120" aria-hidden="true"></svg>
+                            <figcaption>
+                                <span class="readout-label">Elevation</span>
+                                <span class="readout"><span id="elevation">--.---</span>&deg;</span>
+                                <span class="readout-sub">err <span id="elevation_error">0.000</span>&deg;</span>
+                            </figcaption>
+                        </figure>
+                    </div>
+
+                    <dl class="data-table">
+                        <div><dt>Pulse delay</dt><dd id="pulse_delay">&mdash;</dd></div>
+                        <div><dt>Moving</dt><dd id="moving">No</dd></div>
+                        <div><dt>Latitude</dt><dd id="latitude">&mdash;</dd></div>
+                        <div><dt>Longitude</dt><dd id="longitude">&mdash;</dd></div>
+                        <div><dt>MCU link</dt><dd id="mcu_status">&mdash;</dd></div>
+                        <div><dt>GPS fix</dt><dd id="gps_status">&mdash;</dd></div>
+                        <div><dt>Calibrating</dt><dd id="calibrating">No</dd></div>
+                    </dl>
+                </article>
+
+                <article class="panel">
+                    <header class="panel-head">
+                        <span class="panel-code">02</span>
+                        <h2>Manual control</h2>
+                        <span class="panel-rule"></span>
+                    </header>
+
+                    <div class="manual">
+                        <div class="jog-wrap">
+                            <div class="jog-pad">
+                                <span></span>
+                                <button class="jog" type="button" data-dir="up" aria-label="Jog up">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 15l6-6 6 6"/></svg>
+                                </button>
+                                <span></span>
+                                <button class="jog" type="button" data-dir="left" aria-label="Jog left">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>
+                                </button>
+                                <button class="jog-stop" id="stop_btn" type="button" title="Stop all motion (Esc)">Stop</button>
+                                <button class="jog" type="button" data-dir="right" aria-label="Jog right">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+                                </button>
+                                <span></span>
+                                <button class="jog" type="button" data-dir="down" aria-label="Jog down">
+                                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+                                </button>
+                                <span></span>
+                            </div>
+                            <p class="hint"><kbd>&larr;</kbd><kbd>&uarr;</kbd><kbd>&darr;</kbd><kbd>&rarr;</kbd> hold to jog &middot; <kbd>Esc</kbd> stop</p>
                         </div>
-                        <div class="camera-control-row">                        
-                            <strong style="width: 130px;">Exposure:</strong>
-                            <input type="range" min="12" max="800" value="200" class="slider" id="exposureRange">
-                            <span id="exposureValue"></span>
-                        </div>
-                        <div class="camera-control-row">                        
-                            <strong style="width: 130px;">Gain:</strong>
-                            <input type="range" min="0" max="100" value="10" class="slider" id="gainRange">
-                            <span id="gainValue"></span>
+
+                        <div class="manual-side">
+                            <div class="field">
+                                <div class="field-head">
+                                    <label for="speed_range">Pulse delay</label>
+                                    <output id="speed_value" for="speed_range">50 ms</output>
+                                </div>
+                                <input type="range" id="speed_range" min="10" max="100" step="1" value="50">
+                                <div class="range-ends"><span>Fast</span><span>Slow</span></div>
+                            </div>
+
+                            <form id="goto_form" class="goto" novalidate>
+                                <span class="field-title">Go to coordinates</span>
+                                <div class="goto-inputs">
+                                    <label class="input-unit">
+                                        <span>Az</span>
+                                        <input type="number" id="move_azimuth" min="0" max="360" step="0.01" placeholder="180.00">
+                                        <span>&deg;</span>
+                                    </label>
+                                    <label class="input-unit">
+                                        <span>El</span>
+                                        <input type="number" id="move_altitude" min="0" max="90" step="0.01" placeholder="45.00">
+                                        <span>&deg;</span>
+                                    </label>
+                                </div>
+                                <button class="btn btn-primary" type="submit">Slew</button>
+                                <p class="field-error" id="goto_error" role="alert"></p>
+                            </form>
                         </div>
                     </div>
-            </div>
-            <div id="planet_list"></div>
-        </div>
+                </article>
+            </section>
+
+            <!-- ===== Centre column: camera + event log ===== -->
+            <section class="col col-center">
+                <article class="panel">
+                    <header class="panel-head">
+                        <span class="panel-code">03</span>
+                        <h2>Camera</h2>
+                        <span class="panel-rule"></span>
+                        <button class="btn btn-ghost btn-small" id="reticle_toggle" type="button" aria-pressed="true">Reticle</button>
+                    </header>
+
+                    <div class="viewport" id="viewport">
+                        <img src="/video_feed" alt="Live telescope camera" id="camera-stream">
+                        <div class="no-signal" id="no_signal" hidden>
+                            <span>No camera signal</span>
+                            <button class="btn btn-small" id="camera_retry" type="button">Retry</button>
+                        </div>
+                        <svg class="reticle" viewBox="0 0 160 90" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                            <path d="M0 45h68M92 45h68M80 0v33M80 57v33"/>
+                            <circle cx="80" cy="45" r="9"/>
+                            <circle cx="80" cy="45" r="0.8" class="reticle-dot"/>
+                            <path d="M80 30v4M80 56v4M65 45h4M91 45h4" class="reticle-tick"/>
+                        </svg>
+                        <span class="corner tl"></span><span class="corner tr"></span>
+                        <span class="corner bl"></span><span class="corner br"></span>
+                        <div class="hud hud-tl"><span class="live-dot"></span>Live &middot; cam 0</div>
+                        <div class="hud hud-tr" id="hud_mode">Idle</div>
+                        <div class="hud hud-bl">Az <span id="hud_az">---.--</span>&deg; &nbsp; El <span id="hud_el">--.--</span>&deg;</div>
+                        <div class="hud hud-br" id="hud_time">--:--:-- UTC</div>
+                    </div>
+
+                    <div class="camera-controls">
+                        <div class="field">
+                            <div class="field-head"><label for="brightnessRange">Brightness</label><output id="brightnessValue">0</output></div>
+                            <input type="range" min="-64" max="64" value="0" id="brightnessRange">
+                        </div>
+                        <div class="field">
+                            <div class="field-head"><label for="exposureRange">Exposure</label><output id="exposureValue">200</output></div>
+                            <input type="range" min="12" max="800" value="200" id="exposureRange">
+                        </div>
+                        <div class="field">
+                            <div class="field-head"><label for="gainRange">Gain</label><output id="gainValue">10</output></div>
+                            <input type="range" min="0" max="100" value="10" id="gainRange">
+                        </div>
+                    </div>
+                </article>
+
+                <article class="panel panel-log">
+                    <header class="panel-head">
+                        <span class="panel-code">04</span>
+                        <h2>Event log</h2>
+                        <span class="panel-rule"></span>
+                        <button class="btn btn-ghost btn-small" id="log_clear" type="button">Clear</button>
+                    </header>
+                    <ol class="log" id="event_log" aria-live="polite"></ol>
+                </article>
+            </section>
+
+            <!-- ===== Right column: sky view, targets, system ===== -->
+            <section class="col col-right">
+                <article class="panel">
+                    <header class="panel-head">
+                        <span class="panel-code">05</span>
+                        <h2>Sky view</h2>
+                        <span class="panel-rule"></span>
+                        <span class="panel-meta">N up &middot; zenith centre</span>
+                    </header>
+                    <svg id="sky_dome" class="sky-dome" viewBox="0 0 300 300" role="img" aria-label="Sky map showing where the telescope points and where the planets are"></svg>
+                    <div class="sky-legend">
+                        <span><i class="lg lg-scope"></i>Scope</span>
+                        <span><i class="lg lg-target"></i>Target</span>
+                        <span><i class="lg lg-min"></i>25&deg; minimum</span>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <header class="panel-head">
+                        <span class="panel-code">06</span>
+                        <h2>Targets</h2>
+                        <span class="panel-rule"></span>
+                        <span class="panel-meta" id="planets_updated">&mdash;</span>
+                    </header>
+                    <div class="target-list" id="planet_list"></div>
+                    <div class="target-actions">
+                        <div class="selected-label">
+                            <span>Selected</span>
+                            <strong id="selected_target">None</strong>
+                        </div>
+                        <button class="btn btn-primary" id="goto_target_btn" type="button">Go to</button>
+                        <button class="btn" id="track_target_btn" type="button">Track</button>
+                    </div>
+                </article>
+
+                <article class="panel">
+                    <header class="panel-head">
+                        <span class="panel-code">07</span>
+                        <h2>System</h2>
+                        <span class="panel-rule"></span>
+                    </header>
+                    <div class="callout" id="calibration_callout" hidden>
+                        <p>Calibrating on Polaris. Use the jog pad to centre it in the camera, then finish calibration.</p>
+                        <button class="btn btn-warm" id="finish_calibration_btn" type="button">Finish calibration</button>
+                    </div>
+                    <div class="btn-row">
+                        <button class="btn" id="calibrate_btn" type="button">Calibrate</button>
+                        <button class="btn" id="reset_origin_btn" type="button">Reset origin</button>
+                        <button class="btn btn-ghost" id="test_btn" type="button">Test</button>
+                    </div>
+                </article>
+            </section>
+        </main>
     </div>
-    <script src="{{ url_for('static', filename='script.js') }}"></script>
+
+    <div class="toast-stack" id="toast_stack" aria-live="assertive"></div>
+
+    <!-- ES module entry point; main.js imports the rest of static/js/ -->
+    <script type="module" src="{{ url_for('static', filename='js/main.js') }}"></script>
 </body>
 </html>

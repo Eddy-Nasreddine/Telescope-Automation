@@ -84,6 +84,10 @@ The Raspberry Pi and STM32 communicate over UART at **115200 baud**. Commands ar
 - **GPS Integration** — acquires observer coordinates for accurate astrometric calculations
 - **Live Camera Feed** — MJPEG stream from an attached camera with adjustable exposure, gain, and brightness
 - **System Status** — real-time display of azimuth, elevation, moving state, GPS lock, and MCU connection status
+- **Sky View** — top-down alt/az map showing where the telescope points and where each planet currently sits
+- **Event Log** — timestamped console of commands, arrivals, link changes, and errors
+- **Night Vision Mode** — all-red theme (including the camera feed) to preserve dark adaptation; toggle with `N`
+- **Keyboard Shortcuts** — hold arrow keys to jog, `Esc` to stop all motion
 
 ---
 
@@ -98,8 +102,20 @@ Telescope-Automation/
 │   ├── CelestialObject.py      # Astrometric coordinate calculations
 │   ├── GpsUartReceiver.py      # GPS serial reader
 │   ├── CameraStream.py         # MJPEG camera stream
-│   └── templates/
-│       └── index.html          # Web interface
+│   ├── templates/
+│   │   └── index.html          # Web interface markup
+│   └── static/
+│       ├── css/
+│       │   ├── base/           # Theme tokens, reset, layout grid, shared components
+│       │   └── panels/         # One stylesheet per dashboard panel
+│       ├── js/
+│       │   ├── main.js         # Front-end entry point (ES modules)
+│       │   ├── config.js       # Shared constants (poll rates, 25° minimum elevation)
+│       │   ├── state.js        # Shared UI state
+│       │   ├── core/           # Status polling, API calls, mode, theme, keyboard shortcuts
+│       │   ├── panels/         # One module per dashboard panel
+│       │   └── utils/          # DOM, formatting and geometry helpers
+│       └── images/             # Planet images
 ├── main.c                      # STM32 HAL firmware
 └── README.md
 ```

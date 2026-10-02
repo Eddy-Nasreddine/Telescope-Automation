@@ -1,0 +1,96 @@
+/* App shell, column grid, panel chrome and the responsive breakpoints for the grid. */
+
+.app {
+    position: relative;
+    z-index: 1;
+    max-width: 1680px;
+    margin: 0 auto;
+    padding: 16px 20px 28px;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: 340px minmax(0, 1fr) 360px;
+    gap: 16px;
+    align-items: start;
+}
+
+.col {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    min-width: 0;
+}
+
+/* ---------- Panels ---------- */
+
+.panel {
+    padding: 14px 16px 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow);
+    backdrop-filter: blur(8px);
+    transition: border-color 0.3s ease;
+}
+
+.panel-head {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    min-height: 26px;
+    margin-bottom: 12px;
+}
+
+.panel-code {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--teal);
+    opacity: 0.8;
+}
+
+.panel-head h2 {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--text);
+}
+
+.panel-rule {
+    flex: 1;
+    height: 1px;
+    background: repeating-linear-gradient(90deg, var(--line) 0 4px, transparent 4px 8px);
+}
+
+.panel-meta {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    color: var(--text-faint);
+    white-space: nowrap;
+}
+
+/* ---------- Responsive ---------- */
+
+@media (max-width: 1320px) {
+    .grid {
+        grid-template-columns: 330px minmax(0, 1fr);
+    }
+
+    .col-right {
+        grid-column: 1 / -1;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+        align-items: start;
+    }
+}
+
+@media (max-width: 860px) {
+    .app {
+        padding: 12px 12px 24px;
+    }
+
+    .grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+}

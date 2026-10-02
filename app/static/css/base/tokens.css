@@ -1,0 +1,77 @@
+/* Theme tokens: "cosmos" (default) and "night" (red, keeps night vision). Every colour lives here. */
+
+:root {
+    --bg: #0b0e24;
+    --bg-glow-1: rgba(110, 86, 200, 0.20);
+    --bg-glow-2: rgba(40, 128, 176, 0.14);
+    --panel: rgba(21, 26, 56, 0.82);
+    --panel-solid: #161b3a;
+    --panel-inset: #0f1330;
+    --panel-hover: #1d2350;
+    --line: #2a3166;
+    --line-soft: #20264f;
+
+    --text: #ece6d8;
+    --text-dim: #a8a4c8;
+    --text-faint: #6f6d98;
+
+    --teal: #5fe0b7;
+    --teal-soft: rgba(95, 224, 183, 0.13);
+    --teal-line: rgba(95, 224, 183, 0.42);
+    --amber: #f4c27a;
+    --amber-soft: rgba(244, 194, 122, 0.13);
+    --amber-line: rgba(244, 194, 122, 0.45);
+    --red: #ff7b6b;
+    --red-soft: rgba(255, 123, 107, 0.14);
+    --red-line: rgba(255, 123, 107, 0.5);
+    --blue: #8fb5ff;
+    --blue-soft: rgba(143, 181, 255, 0.14);
+
+    --star-rgb: 236, 230, 216;
+    --sky-disc: #0e1230;
+    --viewport-bg: #04050d;
+    --media-filter: none;
+
+    --shadow: 0 12px 32px rgba(3, 4, 18, 0.45);
+    --radius-lg: 16px;
+    --radius: 10px;
+    --radius-sm: 7px;
+
+    --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, Roboto, Ubuntu, "Helvetica Neue", Arial, sans-serif;
+    --font-mono: "JetBrains Mono", "Cascadia Mono", "SF Mono", Consolas, "DejaVu Sans Mono", "Liberation Mono", monospace;
+
+    color-scheme: dark;
+}
+
+:root[data-theme="night"] {
+    --bg: #090302;
+    --bg-glow-1: rgba(120, 20, 10, 0.16);
+    --bg-glow-2: rgba(90, 14, 8, 0.10);
+    --panel: rgba(24, 8, 6, 0.88);
+    --panel-solid: #180806;
+    --panel-inset: #100403;
+    --panel-hover: #241008;
+    --line: #3d150f;
+    --line-soft: #2a0e0a;
+
+    --text: #e8957d;
+    --text-dim: #ad5d4b;
+    --text-faint: #6e3125;
+
+    --teal: #ff6a4d;
+    --teal-soft: rgba(255, 106, 77, 0.12);
+    --teal-line: rgba(255, 106, 77, 0.42);
+    --amber: #d8734d;
+    --amber-soft: rgba(216, 115, 77, 0.12);
+    --amber-line: rgba(216, 115, 77, 0.45);
+    --red: #ff3b24;
+    --red-soft: rgba(255, 59, 36, 0.16);
+    --red-line: rgba(255, 59, 36, 0.55);
+    --blue: #c25a43;
+    --blue-soft: rgba(194, 90, 67, 0.14);
+
+    --star-rgb: 190, 70, 50;
+    --sky-disc: #120504;
+    --viewport-bg: #050101;
+    --media-filter: grayscale(1) sepia(1) saturate(5) hue-rotate(-40deg) brightness(0.75);
+}
