@@ -77,10 +77,11 @@ The Raspberry Pi and STM32 communicate over UART at **115200 baud**. Commands ar
 ## Features
 
 - **Live Web Interface** — control the telescope from any device on the same network via browser
-- **Manual Jogging** — left, right, up, down buttons for manual fine adjustment; hold to move, release to stop
+- **Manual Jogging** — left, right, up, down buttons for manual fine adjustment; hold to move, release to stop. A heartbeat from the browser acts as a dead-man switch: if it stops (Wi-Fi drop, laptop asleep), the Pi stops the mount
 - **Move To** — enter target azimuth and elevation coordinates to slew to a position
-- **Celestial Object Tracking** — select a planet or star and the system automatically moves to it (tracking in real time is still in progress)
-- **Star Calibration** — moves to Polaris, allows manual jogging to center the star, then calculates and stores azimuth and elevation error offsets applied to all future moves (in progress) 
+- **Celestial Object Tracking** — select a planet or star and the system moves to it, then re-points every few seconds to follow it until stopped or it drops below the minimum elevation
+- **Star Calibration** — moves to Polaris, allows manual jogging to center the star, then calculates and stores azimuth and elevation error offsets applied to all future moves
+- **Layered Safety** — every move is checked against elevation limits (0–90°) and a cable-wrap limit (±180° of azimuth from home) in both the API and the controller; moves claim the busy flag atomically; stops are confirmed by the MCU and resent if lost; the MCU link is health-checked while idle
 - **GPS Integration** — acquires observer coordinates for accurate astrometric calculations
 - **Live Camera Feed** — MJPEG stream from an attached camera with adjustable exposure, gain, and brightness
 - **System Status** — real-time display of azimuth, elevation, moving state, GPS lock, and MCU connection status
@@ -97,11 +98,13 @@ The Raspberry Pi and STM32 communicate over UART at **115200 baud**. Commands ar
 Telescope-Automation/
 ├── app/
 │   ├── app.py                  # Flask application and routes
+│   ├── config.py               # All settings: ports, gearing, limits, timeouts
 │   ├── TelescopeController.py  # Main control layer
 │   ├── MotorController.py      # Stepper motor abstraction
 │   ├── CelestialObject.py      # Astrometric coordinate calculations
 │   ├── GpsUartReceiver.py      # GPS serial reader
 │   ├── CameraStream.py         # MJPEG camera stream
+│   ├── SimulatedSerial.py      # Fake STM32 for running without the hardware
 │   ├── templates/
 │   │   └── index.html          # Web interface markup
 │   └── static/
@@ -116,9 +119,26 @@ Telescope-Automation/
 │       │   ├── panels/         # One module per dashboard panel
 │       │   └── utils/          # DOM, formatting and geometry helpers
 │       └── images/             # Planet images
+├── data/                       # Ephemeris (de421.bsp) and Hipparcos star catalogue
 ├── main.c                      # STM32 HAL firmware
+├── requirements.txt            # Python dependencies
+├── .env.example                # Template for private settings (.env is git-ignored)
 └── README.md
 ```
+
+---
+
+## Setup
+
+```bash
+pip install -r requirements.txt
+cp .env.example .env        # then fill in your fallback latitude/longitude
+python app/app.py
+```
+
+Settings shared by the whole project live in `app/config.py`. Private values (your location) live in `.env`, which git ignores.
+
+**Without the hardware:** set `SIMULATE_HARDWARE=true` in `.env` (or the environment) and the app runs against `SimulatedSerial`, a stand-in that speaks the same UART protocol as `main.c`. Set `PORT` to serve on a port other than 5000.
 
 ---
 

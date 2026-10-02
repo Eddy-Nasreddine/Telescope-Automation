@@ -1,0 +1,8 @@
+Flask
+pyserial
+pynmea2
+skyfield
+numpy
+pandas
+opencv-python
+python-dotenv
