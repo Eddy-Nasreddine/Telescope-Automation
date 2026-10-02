@@ -46,7 +46,7 @@ The Raspberry Pi and STM32 communicate over UART at **115200 baud**. Commands ar
 |---|---|---|---|
 | Move | `<az_dir><az_steps><el_dir><el_steps>` | `+0074-0111` | Move azimuth and elevation |
 | Stop | `S` | `S` | Stop all motion immediately |
-| Handshake | `R` | `R` | Request system state and reset GPIO |
+| Handshake | `R` | `R` | Request system state (replies `R`, then position, pulse delay and `D`); also used as the idle link check |
 | Set Speed | `T<delay>` | `T50` | Set pulse delay in ms (10–100) |
 | Reset Origin | `O` | `O` | Reset azimuth and elevation to home position |
 
@@ -164,6 +164,6 @@ Without internet the Pi's clock can't be trusted, so planet positions use GPS ti
 
 ## Notes
 
-- The system initializes at a hardcoded home position (azimuth: 0°, elevation: 90°) on the STM32 side — physically move the telescope to match this position before powering on, or use **Reset Origin** after repositioning
-- Maximum steps per command is 4000, equivalent to one full 360° rotation
-- Flask runs with `use_reloader=False` to prevent the serial port from being opened twice
+- The system initializes at a hardcoded home position (azimuth: 90°, elevation: 90°) on the STM32 side, matching `HOME_AZ`/`HOME_EL` in `config.py` — physically move the telescope to match this position before powering on, or use **Reset Origin** after repositioning. The motor power cable should be untwisted at home, since the cable-wrap limit counts from there
+- Maximum steps per command is 4000 (`MAX_STEPS_PER_COMMAND` in `config.py`). The gearing differs per axis, so that's 360° of elevation (0.09°/step) but 540° of azimuth (0.135°/step). Real moves are much smaller: elevation is limited to 0–90° (at most 1000 steps) and azimuth to ±180° from home (at most 2667 steps)
+- Flask runs with `debug=False`, which also keeps its auto-reloader off. Don't turn debug mode on: the reloader starts the app twice, which would open the serial ports twice
