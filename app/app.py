@@ -178,8 +178,9 @@ def get_planets():
     for planet in planets:
         cel_obj = CelestialObject(planet["name"])
         altaz = cel_obj.get_astrometric_coords(coords)
-        altitude = altaz[0].degrees
-        azimuth = altaz[1].degrees
+        # Skyfield returns numpy values; convert so jsonify can serialize them
+        altitude = float(altaz[0].degrees)
+        azimuth = float(altaz[1].degrees)
         planet["altitude"] = round(altitude, 2)
         planet["azimuth"] = round(azimuth, 2)
         planet["visible"] = altitude >= 25
