@@ -48,6 +48,9 @@
                 <div class="lamp" id="lamp_gps" data-state="wait" title="GPS fix">
                     <span class="lamp-dot"></span><span class="lamp-label">GPS</span>
                 </div>
+                <div class="lamp" id="lamp_camera" data-state="wait" title="USB camera stream">
+                    <span class="lamp-dot"></span><span class="lamp-label">Cam</span>
+                </div>
                 <div class="lamp" id="lamp_motion" data-state="off" title="Motors moving">
                     <span class="lamp-dot"></span><span class="lamp-label">Motion</span>
                 </div>
@@ -184,10 +187,18 @@
                         <button class="btn btn-ghost btn-small" id="reticle_toggle" type="button" aria-pressed="true">Reticle</button>
                     </header>
 
-                    <div class="viewport" id="viewport">
-                        <img src="/video_feed" alt="Live telescope camera" id="camera-stream">
-                        <div class="no-signal" id="no_signal" hidden>
-                            <span>No camera signal</span>
+                    <!-- data-camera: connecting | live | offline (set by js/panels/camera.js) -->
+                    <div class="viewport" id="viewport" data-camera="connecting">
+                        <!-- src is set by camera.js once its load/error listeners are attached -->
+                        <img alt="Live telescope camera" id="camera-stream">
+                        <div class="camera-overlay" role="status">
+                            <svg viewBox="0 0 24 24" aria-hidden="true">
+                                <path d="M3 8h3.5l2-3h7l2 3H21v11H3z"/>
+                                <circle cx="12" cy="13" r="3.5"/>
+                                <path d="M3 3l18 18" class="camera-slash"/>
+                            </svg>
+                            <p class="camera-overlay-title" id="camera_overlay_title">Connecting to camera</p>
+                            <p class="camera-overlay-sub" id="camera_overlay_sub">Waiting for the first frame…</p>
                             <button class="btn btn-small" id="camera_retry" type="button">Retry</button>
                         </div>
                         <svg class="reticle" viewBox="0 0 160 90" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
@@ -198,13 +209,15 @@
                         </svg>
                         <span class="corner tl"></span><span class="corner tr"></span>
                         <span class="corner bl"></span><span class="corner br"></span>
-                        <div class="hud hud-tl"><span class="live-dot"></span>Live &middot; cam 0</div>
+                        <div class="hud hud-tl"><span class="live-dot"></span><span id="camera_status">Connecting</span></div>
                         <div class="hud hud-tr" id="hud_mode">Idle</div>
                         <div class="hud hud-bl">Az <span id="hud_az">---.--</span>&deg; &nbsp; El <span id="hud_el">--.--</span>&deg;</div>
                         <div class="hud hud-br" id="hud_time">--:--:-- UTC</div>
                     </div>
 
-                    <div class="camera-controls">
+                    <!-- Disabled until the stream is live; a disabled fieldset disables every slider inside -->
+                    <fieldset class="camera-controls" id="camera_controls" disabled>
+                        <legend class="sr-only">Camera settings</legend>
                         <div class="field">
                             <div class="field-head"><label for="brightnessRange">Brightness</label><output id="brightnessValue">0</output></div>
                             <input type="range" min="-64" max="64" value="0" id="brightnessRange">
@@ -217,7 +230,7 @@
                             <div class="field-head"><label for="gainRange">Gain</label><output id="gainValue">10</output></div>
                             <input type="range" min="0" max="100" value="10" id="gainRange">
                         </div>
-                    </div>
+                    </fieldset>
                 </article>
 
                 <article class="panel panel-log">

@@ -4,6 +4,7 @@ export const STATUS_POLL_MS = 100;
 export const STATUS_RETRY_MS = 1000;
 export const PLANET_REFRESH_MS = 30000;
 export const SLEW_START_TIMEOUT_MS = 4000;
+export const CAMERA_CONNECT_TIMEOUT_MS = 10000; // no first frame by then = no signal
 export const MIN_ELEVATION = 25; // must match the visibility cutoff in app.py /planets
 export const LOG_LIMIT = 200;
 export const THEME_KEY = "telescope.theme";

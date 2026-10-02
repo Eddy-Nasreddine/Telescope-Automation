@@ -17,19 +17,81 @@
     filter: var(--media-filter);
 }
 
-.no-signal {
+/* ---------- Stream states: connecting | live | offline ---------- */
+
+/* Hide the <img> until a frame arrives so the browser's broken-image icon never shows. */
+.viewport:not([data-camera="live"]) #camera-stream {
+    visibility: hidden;
+}
+
+.viewport:not([data-camera="live"]) .reticle {
+    opacity: 0;
+}
+
+.camera-overlay {
     position: absolute;
     inset: 0;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    gap: 10px;
+    gap: 6px;
+    padding: 24px;
+    text-align: center;
+}
+
+.viewport[data-camera="live"] .camera-overlay {
+    display: none;
+}
+
+.camera-overlay svg {
+    width: 44px;
+    height: 44px;
+    margin-bottom: 4px;
+    fill: none;
+    stroke: var(--text-faint);
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+
+.camera-slash {
+    display: none;
+}
+
+.camera-overlay-title {
     font-family: var(--font-mono);
     font-size: 13px;
-    letter-spacing: 0.08em;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--text-dim);
+}
+
+.camera-overlay-sub {
+    max-width: 320px;
+    font-size: 12px;
     color: var(--text-faint);
-    background: var(--viewport-bg);
+}
+
+.camera-overlay .btn {
+    margin-top: 8px;
+}
+
+.viewport[data-camera="connecting"] .camera-overlay svg {
+    stroke: var(--amber);
+    animation: pulse 1.6s ease-in-out infinite;
+}
+
+.viewport[data-camera="offline"] .camera-overlay svg {
+    stroke: var(--red);
+}
+
+.viewport[data-camera="offline"] .camera-slash {
+    display: inline;
+}
+
+.viewport:not([data-camera="offline"]) #camera_retry {
+    display: none;
 }
 
 .reticle {
@@ -92,6 +154,7 @@
 .hud-bl { bottom: 16px; left: 34px; color: var(--teal); }
 .hud-br { bottom: 16px; right: 34px; color: var(--text-dim); }
 
+/* Red "recording" light while live, amber while connecting, dark when offline. */
 .live-dot {
     width: 7px;
     height: 7px;
@@ -100,11 +163,36 @@
     animation: pulse 1.6s ease-in-out infinite;
 }
 
+.viewport[data-camera="connecting"] .live-dot {
+    background: var(--amber);
+}
+
+.viewport[data-camera="offline"] .live-dot {
+    background: var(--text-faint);
+    animation: none;
+}
+
+.viewport[data-camera="offline"] .hud-tl {
+    color: var(--text-dim);
+}
+
 .camera-controls {
     display: grid;
     grid-template-columns: repeat(3, minmax(0, 1fr));
     gap: 18px;
-    margin-top: 14px;
+    min-width: 0;
+    margin: 14px 0 0;
+    padding: 0;
+    border: 0;
+    transition: opacity 0.2s ease;
+}
+
+.camera-controls:disabled {
+    opacity: 0.4;
+}
+
+.camera-controls:disabled input[type="range"] {
+    cursor: not-allowed;
 }
 
 @media (max-width: 860px) {
