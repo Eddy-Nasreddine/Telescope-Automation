@@ -94,6 +94,13 @@ function updateElGauge(el) {
 
 /* ---------- Readouts ---------- */
 
+// Where the Pi's astronomy clock comes from (see app/TimeKeeper.py)
+const TIME_SOURCES = {
+    gps: { text: "GPS", cls: "is-ok" },
+    laptop: { text: "Laptop", cls: "is-wait" },
+    system: { text: "Pi clock", cls: "is-wait" },
+};
+
 function setStatusText(id, text, cls) {
     const el = $(id);
     el.textContent = text;
@@ -113,6 +120,8 @@ export function renderTelemetry(data) {
     setStatusText("mcu_status", data.sys_ready ? "Connected" : "Waiting for UART…", data.sys_ready ? "is-ok" : "is-wait");
     setStatusText("gps_status", data.gps_ready ? "Fix acquired" : "Waiting for fix…", data.gps_ready ? "is-ok" : "is-wait");
     $("az_wrap").textContent = isNumber(data.az_wrap) ? `${signed(data.az_wrap, 1)}°` : "—";
+    const time = TIME_SOURCES[data.time_source];
+    if (time) setStatusText("time_source", time.text, time.cls);
 
     updateAzDial(data.azimuth);
     updateElGauge(data.altitude);

@@ -9,6 +9,7 @@ from MotorController import StepperMotor
 from TelescopeController import TelescopeController, TelescopeError, TelescopeBusyError
 from CelestialObject import CelestialObject
 from CameraStream import CameraStream
+from TimeKeeper import time_keeper
 
 # Configure logging before any hardware objects are created, so their start-up
 # messages (handshake, GPS, UART) aren't lost.
@@ -127,7 +128,16 @@ def status():
         "calibrating": telescope.calibrating,
         "tracking": telescope.tracking,
         "camera_ok": camera_stream.is_streaming(),
+        "time_source": time_keeper.source,
     })
+
+
+@app.route("/sync_time", methods=["POST"])
+def sync_time():
+    # The dashboard sends the laptop's clock; used when there's no GPS time yet
+    epoch_ms = get_number("epoch_ms")
+    time_keeper.update_from_laptop(epoch_ms)
+    return jsonify({"status": "ok", "time_source": time_keeper.source})
 
 
 @app.route("/movement_pressed", methods=["POST"])

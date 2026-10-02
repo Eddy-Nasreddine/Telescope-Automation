@@ -10,7 +10,7 @@ import { setupSky } from "./panels/sky.js";
 import { setupSystem } from "./panels/system.js";
 import { selectPlanet, setupTargets, startPlanetRefresh } from "./panels/targets.js";
 import { setupTelemetry } from "./panels/telemetry.js";
-import { renderClocks } from "./panels/topbar.js";
+import { renderClocks, startTimeSync } from "./panels/topbar.js";
 
 function tickClocks() {
     const now = new Date();
@@ -30,10 +30,12 @@ function init() {
     setupKeyboard();
 
     logEvent("info", "Console ready.");
+    const timeSynced = startTimeSync();
     tickClocks();
     setInterval(tickClocks, 1000);
     startStatusPolling();
-    startPlanetRefresh();
+    // Planet positions depend on the time, so load them only after the Pi has the laptop's clock
+    timeSynced.then(startPlanetRefresh);
 }
 
 // Module scripts run after the HTML is parsed, so the DOM is ready here.

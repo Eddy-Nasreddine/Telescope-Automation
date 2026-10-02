@@ -1,0 +1,2 @@
+# Shell scripts run on the Pi; Windows line endings (CRLF) would break bash
+*.sh text eol=lf

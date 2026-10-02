@@ -5,6 +5,7 @@ import pynmea2
 import serial
 
 import config
+from TimeKeeper import time_keeper
 
 logger = logging.getLogger("GT-U7 GPS")
 
@@ -67,6 +68,8 @@ class GpsUartReceiver:
                             self.lat = msg.latitude
                             self.lon = msg.longitude
                             self.timestamp = msg.timestamp
+                        if msg.datestamp is not None:
+                            time_keeper.update_from_gps(msg.datetime)    # UTC, from the satellites
                         self._set_fix(True)
                     else:
                         self._set_fix(False)

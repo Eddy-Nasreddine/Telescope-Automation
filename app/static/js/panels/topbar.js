@@ -23,6 +23,27 @@ function localSiderealHours(date, longitudeDeg) {
     return ((((gmst + longitudeDeg / 15) % 24) + 24) % 24);
 }
 
+// The Pi has no internet outside, so send it the laptop's clock. It's only used
+// until the GPS provides time. Resent every minute so a restarted server picks it up.
+const TIME_SYNC_MS = 60000;
+
+function sendLaptopTime() {
+    return fetch("/sync_time", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ epoch_ms: Date.now() }),
+    }).catch(() => {
+        // Server unreachable; the next attempt will retry.
+    });
+}
+
+// Resolves once the first sync has been answered (or failed), so callers can
+// wait for it before asking the Pi for planet positions.
+export function startTimeSync() {
+    setInterval(sendLaptopTime, TIME_SYNC_MS);
+    return sendLaptopTime();
+}
+
 export function renderClocks(now) {
     $("clock_local").textContent = formatClock(now);
     $("clock_utc").textContent = formatClock(now, true);

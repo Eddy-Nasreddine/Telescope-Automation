@@ -4,6 +4,7 @@ from skyfield.api import Loader, Topos, Star
 from skyfield.data import hipparcos
 
 import config
+from TimeKeeper import time_keeper
 
 # Load once at module level, avoids reloading the file on every CelestialObject
 _loader = Loader(str(config.DATA_DIR))
@@ -56,7 +57,8 @@ class CelestialObject:
         return self.name.capitalize()
 
     def get_time_now(self):
-        return self.ts.now()
+        # GPS or laptop time when available; the Pi's clock can be wrong offline
+        return self.ts.from_datetime(time_keeper.now())
 
     def get_location(self, lat: float, lon: float):
         coords = Topos(

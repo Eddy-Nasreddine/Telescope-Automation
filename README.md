@@ -82,7 +82,8 @@ The Raspberry Pi and STM32 communicate over UART at **115200 baud**. Commands ar
 - **Celestial Object Tracking** — select a planet or star and the system moves to it, then re-points every few seconds to follow it until stopped or it drops below the minimum elevation
 - **Star Calibration** — moves to Polaris, allows manual jogging to center the star, then calculates and stores azimuth and elevation error offsets applied to all future moves
 - **Layered Safety** — every move is checked against elevation limits (0–90°) and a cable-wrap limit (±180° of azimuth from home) in both the API and the controller; moves claim the busy flag atomically; stops are confirmed by the MCU and resent if lost; the MCU link is health-checked while idle
-- **GPS Integration** — acquires observer coordinates for accurate astrometric calculations
+- **GPS Integration** — acquires observer coordinates and the exact time for accurate astrometric calculations
+- **Works Offline** — the Pi can run its own Wi-Fi network for observing away from home; planet positions use GPS time, then the laptop's clock, so they stay correct with no internet
 - **Live Camera Feed** — MJPEG stream from an attached camera with adjustable exposure, gain, and brightness
 - **System Status** — real-time display of azimuth, elevation, moving state, GPS lock, and MCU connection status
 - **Sky View** — top-down alt/az map showing where the telescope points and where each planet currently sits
@@ -104,6 +105,7 @@ Telescope-Automation/
 │   ├── CelestialObject.py      # Astrometric coordinate calculations
 │   ├── GpsUartReceiver.py      # GPS serial reader
 │   ├── CameraStream.py         # MJPEG camera stream
+│   ├── TimeKeeper.py           # Astronomy clock: GPS, then laptop, then system time
 │   ├── SimulatedSerial.py      # Fake STM32 for running without the hardware
 │   ├── templates/
 │   │   └── index.html          # Web interface markup
@@ -120,6 +122,8 @@ Telescope-Automation/
 │       │   └── utils/          # DOM, formatting and geometry helpers
 │       └── images/             # Planet images
 ├── data/                       # Ephemeris (de421.bsp) and Hipparcos star catalogue
+├── scripts/
+│   └── hotspot.sh              # Switch the Pi between its own Wi-Fi network and home Wi-Fi
 ├── main.c                      # STM32 HAL firmware
 ├── requirements.txt            # Python dependencies
 ├── .env.example                # Template for private settings (.env is git-ignored)
@@ -139,6 +143,20 @@ python app/app.py
 Settings shared by the whole project live in `app/config.py`. Private values (your location) live in `.env`, which git ignores.
 
 **Without the hardware:** set `SIMULATE_HARDWARE=true` in `.env` (or the environment) and the app runs against `SimulatedSerial`, a stand-in that speaks the same UART protocol as `main.c`. Set `PORT` to serve on a port other than 5000.
+
+### Observing outside (no internet)
+
+The Pi can host its own Wi-Fi network, so the laptop connects to it directly:
+
+```bash
+bash scripts/hotspot.sh on       # first run asks for a network name and password
+bash scripts/hotspot.sh status
+bash scripts/hotspot.sh off      # back to home Wi-Fi
+```
+
+Run `on` while still at home (your SSH session will drop as the Pi switches over). The hotspot stays on through reboots, so outside you just power up the Pi, join its network, SSH in to start the app, and open `http://10.42.0.1:5000`. Run `off` to return to home Wi-Fi.
+
+Without internet the Pi's clock can't be trusted, so planet positions use GPS time once the module has a fix, and the laptop's clock (sent by the dashboard) until then. The **Time source** row in Telemetry shows which is in use.
 
 ---
 
